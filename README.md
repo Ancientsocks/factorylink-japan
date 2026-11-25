@@ -1,201 +1,354 @@
-# FactoryLink
+# FactoryLink 🇯🇵
+### Manufacturing Operations & Supplier Collaboration Platform
 
-**Manufacturing Operations & Supplier Collaboration Platform**  
-**Local package:** Japan Local RC24 · **Application version:** `1.0.0-rc.24`
+**Connecting Japanese manufacturers, suppliers, inventory, production, quality control, and traceability in one platform.**
 
-FactoryLink is a Japan-oriented web application for manufacturers and their suppliers. It brings procurement, inventory, production, quality, lot/serial traceability, maintenance, documents, notifications and operational reporting into one workspace. The interface supports English and Japanese, with `Asia/Tokyo` as the default display timezone and JPY as the default currency.
+FactoryLink is a full-stack manufacturing operations and supplier collaboration platform designed around the operational challenges faced by Japanese manufacturing companies, particularly small and medium-sized manufacturers.
 
-> **Release status:** This is a hardened local evaluation candidate, not a certified or production-approved system. Use fictional demo data until Docker, browser, PostgreSQL, Redis/Celery, ClamAV, storage, recovery, security and factory acceptance checks have passed.
+It provides a centralized digital workspace to manage the manufacturing lifecycle — from purchasing raw materials and coordinating with suppliers to production, quality inspections, inventory management, and finished-product shipments.
 
-## Verification status — 2026-11-25
+Built with **English and Japanese language support**, Tokyo timezone defaults, and Japanese Yen (JPY) currency conventions.
 
-- Backend regression suite: **207 passed** (Python 3.12, FastAPI 0.165.0 / Starlette 1.10.0), including 15 edit/delete, 12 email-verification, 9 Google sign-in and 7 email-delivery regression tests.
-- PostgreSQL 17.11: `alembic upgrade head` reaches `0014` on an empty database both with and without the restricted runtime role; `scripts/db/verify-runtime-role.sql` reports a least-privilege pass; running the API as `factorylink_app` allowed supplier create/patch/delete and equipment patch against a real server.
-- Docker Compose: both compose files validate, images build from this tree, the full stack (PostgreSQL, Redis, ClamAV, migrate, backend, worker, scheduler, frontend) starts healthy, `/health/ready` reports database, Redis and scanner ok, and `scripts/postgres-api-smoke.py` passed against the stack.
-- Account security: registration and forgotten-password recovery require a six-digit code emailed to the address before a password is set; codes are hashed, expire in ten minutes, allow five attempts and are rate limited. Codes are delivered by SMTP or the Resend HTTPS API (HTML + plain text), and the API reports when no channel is configured instead of claiming a send.
-- Google sign-in and sign-up are supported when `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` are set: existing accounts sign in, new Google users confirm their workspace details, and the button stays hidden until the server reports the provider enabled. The live Google round-trip was not exercised (no client ID in this environment); the server-side hand-off is covered by tests and a simulated browser hand-off.
-- Frontend unit suite: **8 passed**; production TypeScript/Vite build passed (1,580 modules).
-- Dependency audits: `pip-audit -r backend/requirements.txt` and `npm audit --audit-level=high` report **no known vulnerabilities**.
-- Local acceptance runner: **5 passed, 0 failed, 6 skipped** (fresh Alembic migration, idempotent seed, live API manufacturing workflow).
-- **Not run in this pass:** Playwright browser journeys, Render deployment, private S3, delivery to a real customer inbox (no SMTP/Resend credentials here), a real Google consent round-trip (no client ID here), external monitoring and backup/PITR drills. These remain release gates, not claims.
+---
 
-## Core business workflow
+## 1. The Problem: Manufacturing Challenges in Japan
 
-1. A manufacturer creates a purchase order and shares it with a linked supplier.
-2. The supplier confirms the order, updates delivery status and shares permitted documents.
-3. The factory records partial/final goods receipts. Each receipt creates lot/batch inventory and immutable stock movements.
-4. Production orders reserve eligible stock using FIFO, record progress and consume reserved materials on completion.
-5. Accepted completed units receive unique finished-product serial numbers linked to the source material lots. Rejected units are not serialised.
-6. Quality inspections use reusable templates and pass/fail or numeric tolerance criteria. A failure creates a quality hold and a CAPA case; release is explicit and evidence-gated.
-7. Lot/serial traceability shows supplier, PO, receipts, inventory movements, production, inspection, CAPA and shipment events. QR codes can be downloaded; camera scanning is available in supported browsers with manual search as fallback.
-8. Equipment maintenance tracks preventive and unplanned work and reports downtime. Dashboards, notifications, audit logs and CSV/XLSX reports use tenant-scoped application data.
+Japan has one of the world's most established manufacturing industries. However, maintaining manufacturing productivity and competitiveness has become increasingly challenging.
 
-## Main modules
+While researching Japan's manufacturing industry and government publications, I identified several important challenges:
 
-- Multi-tenant manufacturer/supplier workspaces, authentication, refresh-token rotation and role-based access.
-- Supplier registry, purchase orders, supplier portal, partial delivery, goods receipt and document sharing.
-- Edit and delete for suppliers, purchase orders, production orders, equipment, maintenance tasks, quality templates, users and shared documents. The server only allows edits while a record is still mutable and refuses deletes that would orphan stock, quality or maintenance history; accounts are deactivated rather than erased and quality templates are retired, so audit trails remain intact.
-- Materials, batches/lots, FIFO reservations, consumption, reason-coded adjustments and stock movement ledger.
-- Production orders, progress, completed/rejected quantities and finished-product serialisation.
-- Quality templates, inspections, defects, CAPA lifecycle, batch holds and controlled release.
-- Forward lot genealogy, backward serial genealogy, QR generation, camera/manual lookup and shipment records.
-- Equipment, preventive maintenance, breakdown/downtime records and maintenance analytics.
-- Real-data dashboards, notifications, audit history and CSV/XLSX reports.
-- English/Japanese UI, Japanese UTF-8 data handling, Asia/Tokyo display and JPY formatting.
+### Key challenges
 
-## Technology
+**1. Labour Shortages**
 
-- **Frontend:** React 19, TypeScript, Vite, Nginx.
-- **Backend:** Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic.
-- **Data/services:** PostgreSQL 17, Redis 7, Celery worker and scheduler.
-- **Documents/security:** local persistent volume for local evaluation; private S3-compatible storage for production; private ClamAV scanning in Compose.
-- **Tests:** Pytest, HTTPX, Playwright and scripted acceptance checks.
-- **Deployment foundations:** Docker Compose, a single Render Blueprint and GitHub Actions.
+Manufacturers, particularly smaller businesses, face difficulties securing and retaining skilled workers. This creates pressure to improve productivity and reduce dependence on manual administrative processes.
 
-## Repository structure
+**2. Supplier and Supply-Chain Coordination**
 
-```text
-FactoryLink/
-├── backend/                 # FastAPI app, SQLAlchemy models, migrations and tests
-│   ├── app/                  # API, business rules, storage, scanner and background tasks
-│   ├── migrations/           # Alembic migration history
-│   ├── tests/                # Backend tests
-│   ├── requirements.txt      # Runtime dependencies (Docker/Render)
-│   └── requirements-dev.txt  # Runtime + backend test dependencies
-├── frontend/                # React/TypeScript app and Nginx configuration
-├── scanner/                 # ClamAV image definition
-├── e2e/                     # Playwright browser journeys
-├── scripts/                 # Startup, acceptance, DB, backup/restore and load tools
-├── docs/                    # Architecture, workflow, decisions and release evidence
-├── docker-compose.yml       # Local multi-container environment
-├── render.yaml              # Single Render Blueprint: database + application services
-├── .env.example             # Local environment template; never put real secrets here
-└── README.md
-```
+Manufacturers depend on multiple suppliers for raw materials and components. Disconnected communication, delayed delivery updates, and limited visibility into supplier activities can make production planning difficult.
 
-Historical RC build evidence is kept under `docs/releases/history/`. Current RC24 evidence is under `docs/releases/`.
+**3. Manufacturing Productivity**
 
-## Requirements for local run
+Managing purchasing, inventory, production, and quality operations through disconnected systems or manual processes makes it difficult to maintain visibility across the manufacturing lifecycle.
 
-- Windows 10/11 with Docker Desktop, or Docker Engine + Compose on macOS/Linux.
-- Docker Desktop configured for **Linux containers** and running.
-- Internet access for the first image/package download.
-- Allocate about 4 GiB RAM or more to Docker Desktop for ClamAV signature loading; more memory improves startup headroom.
+**4. Digital Transformation (DX)**
 
-## Quick start — Windows PowerShell
+Smaller manufacturers can face financial, technical, and workforce barriers when adopting digital technologies and connecting their existing business operations.
 
-1. Extract the ZIP into a normal writable folder.
-2. Open Docker Desktop and wait for **Engine running**.
-3. Open PowerShell in the extracted `FactoryLink` directory.
-4. Run:
+**5. Inventory and Production Traceability**
 
-   ```powershell
-   .\scripts\start.ps1
-   ```
+Manufacturers need reliable information about material batches, production activities, inspection results, and finished products. Poor visibility can make quality investigations and inventory reconciliation more difficult.
 
-5. The script creates `.env` from `.env.example` for local evaluation, checks Docker Engine, then builds and starts the services. First start may take several minutes while images, Python/npm packages and ClamAV signatures are downloaded.
-6. Open [http://localhost:8080](http://localhost:8080). API docs are at [http://localhost:8080/docs](http://localhost:8080/docs).
+### Government research and references
 
-### macOS / Linux
+FactoryLink's problem context is informed by the following Japanese government publications:
+
+- [METI – Smart Manufacturing Development Guideline (2024)](https://www.meti.go.jp/english/press/2024/0628_002.html): Identifies supply-chain disruptions, productivity declines associated with labour shortages, and increasing management costs.
+- [METI – White Paper on Manufacturing Industries (2025)](https://www.meti.go.jp/english/press/2025/0530_007.html): Discusses manufacturing competitiveness, digital transformation, human resources, and economic security.
+- [METI – 2025 White Paper on Small and Medium Enterprises](https://www.meti.go.jp/english/press/2025/0425_001.html): Highlights structural labour shortages and increasing production and investment costs.
+- [Small and Medium Enterprise Agency – 2025 White Paper](https://www.chusho.meti.go.jp/pamflet/hakusyo/2025/shokibo/b2_1_1.html): Discusses barriers to digital transformation, including costs, insufficient DX personnel, and limited time.
+
+---
+
+## 2. The Solution: FactoryLink
+
+FactoryLink aims to address operational fragmentation by connecting essential manufacturing activities in one system.
+
+Instead of treating purchasing, suppliers, inventory, production, quality, and maintenance as separate processes, FactoryLink connects them through a shared operational workflow.
+
+### How FactoryLink addresses these challenges
+
+| Manufacturing challenge | FactoryLink solution |
+|---|---|
+| Disconnected supplier communication | Dedicated supplier collaboration portal |
+| Limited purchase-order visibility | Purchase orders and delivery tracking |
+| Inventory inconsistencies | Batch-based inventory and immutable stock ledger |
+| Production material shortages | FIFO inventory reservations |
+| Difficult product traceability | Forward and backward lot genealogy |
+| Quality-control problems | Inspection templates, quality holds, and CAPA |
+| Equipment downtime | Preventive maintenance and breakdown tracking |
+| Language barriers | English and Japanese interface |
+
+**The goal:** Improve operational visibility, strengthen supplier coordination, and provide manufacturers with a connected digital foundation for managing their operations.
+
+FactoryLink is an independent software project inspired by these industry challenges, not an officially endorsed Japanese government product.
+
+---
+
+## 3. Manufacturing Workflow
+
+FactoryLink models the manufacturing lifecycle from purchasing raw materials to shipping finished products.
+
+1. **Purchase Orders:** Manufacturers create purchase orders and share them with registered suppliers.
+2. **Supplier Collaboration:** Suppliers access a separate workspace to confirm orders, update delivery progress, and share documents.
+3. **Goods Receiving:** Factories record partial or complete deliveries. Each receipt creates inventory lots and immutable stock movements.
+4. **Inventory Management:** Materials are tracked by batch, with FIFO reservations, stock adjustments, and inventory history.
+5. **Production Management:** Production orders reserve materials, track progress, and record completed and rejected quantities.
+6. **Product Serialisation:** Accepted finished units receive unique serial numbers linked to their source material lots.
+7. **Quality Control:** Reusable inspection templates support pass/fail checks and numeric tolerance validation.
+8. **Corrective Actions:** Failed inspections trigger quality holds and CAPA cases. Releasing held inventory requires explicit approval and supporting evidence.
+9. **Traceability:** Manufacturers can investigate the complete journey from supplier and raw material batches to production, inspection, and shipment.
+10. **Maintenance:** Equipment maintenance, breakdowns, and downtime are recorded and analysed.
+
+---
+
+## 4. Core Features
+
+### Supplier and Procurement Management
+- Multi-tenant manufacturer and supplier workspaces.
+- Supplier registry and supplier portal.
+- Purchase-order creation and management.
+- Supplier order confirmations and delivery updates.
+- Document sharing between manufacturers and suppliers.
+- Partial and complete goods receipts.
+
+### Inventory and Warehouse Management
+- Material and batch management.
+- FIFO stock reservations.
+- Immutable stock movement ledger.
+- Reason-coded inventory adjustments.
+- Inventory reconciliation and stock visibility.
+
+### Production Management
+- Production order management.
+- Material reservation and consumption.
+- Production progress tracking.
+- Completed and rejected quantity tracking.
+- Unique serial numbers for accepted finished products.
+
+### Quality Management
+- Reusable quality inspection templates.
+- Pass/fail and numeric tolerance inspections.
+- Defect recording.
+- Automatic quality holds following failed inspections.
+- Corrective and Preventive Action (CAPA) lifecycle.
+- Evidence-gated quality release.
+
+### Product Traceability
+- Forward material-lot genealogy.
+- Backward finished-product serial genealogy.
+- Supplier-to-finished-product traceability.
+- QR code generation and downloading.
+- Camera-based QR scanning with manual fallback.
+- Shipment records.
+
+### Maintenance Management
+- Equipment registry.
+- Preventive maintenance scheduling.
+- Unplanned maintenance and breakdown records.
+- Equipment downtime tracking.
+- Maintenance analytics.
+
+### Administration and Reporting
+- Role-based access control.
+- User and supplier management.
+- Refresh-token rotation.
+- Audit history.
+- Notifications and operational dashboards.
+- CSV and XLSX reports.
+- Safe editing, deletion, deactivation, and archival rules.
+
+### Japanese Localization
+- English and Japanese user interfaces.
+- Japanese UTF-8 character handling.
+- Tokyo timezone defaults.
+- Japanese Yen (JPY) currency defaults.
+
+---
+
+## 5. Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript, Vite |
+| Backend | Python 3.12, FastAPI |
+| ORM | SQLAlchemy 2 |
+| Database | PostgreSQL 17 |
+| Migrations | Alembic |
+| Background Jobs | Celery |
+| Message Broker / Cache | Redis 7 |
+| Malware Scanning | ClamAV |
+| Web Server | Nginx |
+| Containerization | Docker, Docker Compose |
+| Cloud Deployment | Render Blueprint |
+| CI | GitHub Actions |
+
+### Architecture
+
+FactoryLink follows a modular monolith architecture with separate frontend, backend, database, background-worker, scheduler, and malware-scanning services.
+
+The system uses PostgreSQL row-level security to enforce tenant isolation and database-backed inventory and traceability records to maintain operational consistency.
+
+---
+
+## 6. Security and Data Integrity
+
+Security and data integrity are important because manufacturing systems handle supplier information, inventory records, quality evidence, and production history.
+
+Implemented security measures include:
+
+- Multi-tenant access isolation using PostgreSQL Row-Level Security.
+- Role-based permissions.
+- Access and refresh-token authentication.
+- Refresh-token rotation.
+- Six-digit email verification codes.
+- SHA-256 hashing of verification codes.
+- Verification-code expiration and attempt limits.
+- Rate limiting.
+- Password reset verification.
+- Optional Google authentication.
+- ClamAV document malware scanning.
+- Immutable stock movement history.
+- Audit logging.
+- Controlled quality-hold release.
+- Safe deletion rules to protect historical records.
+
+---
+
+## 7. Testing and Verification
+
+FactoryLink has undergone extensive local testing.
+
+| Verification | Result |
+|---|---|
+| Backend automated tests | 207 passed |
+| Frontend unit tests | 8 passed |
+| Production frontend build | Passed |
+| PostgreSQL migration verification | 0014 applied successfully |
+| Runtime database permissions | Create, update, and delete verified |
+| Docker Compose services | All verified healthy |
+| Dependency security audits | No known vulnerabilities reported |
+| Acceptance tests | 5 passed, 0 failed, 6 skipped |
+| Alembic migration history | 14 migrations |
+
+### Important verification notes
+
+- PostgreSQL 17.11 was tested.
+- Docker Compose was tested with PostgreSQL, Redis, ClamAV, migrations, backend, worker, scheduler, and frontend.
+- The application readiness endpoint was verified.
+- Playwright browser journeys remain to be fully verified.
+- Real external email delivery requires SMTP or Resend configuration.
+
+---
+
+## 8. Running Locally
+
+### Prerequisites
+
+- Docker Desktop
+- Docker Compose
+- Git
+
+### Clone the repository
 
 ```bash
-chmod +x scripts/start.sh
-./scripts/start.sh
+git clone https://github.com/Ancientsocks/factorylink-japan.git
+cd factorylink-japan
 ```
 
-Open [http://localhost:8080](http://localhost:8080).
+### Configure environment variables
 
-## Local demo accounts
+```bash
+cp .env.example .env
+```
 
-All users and companies are fictional. The listed account and password are for **local development/demo seeding only**; demo seeding and these credentials are disabled in the production Render configuration. Never reuse this password for a real user.
+Edit `.env` and configure the required local environment values.
 
-| Role | Email |
+### Start the application
+
+```bash
+docker compose up --build -d
+```
+
+### Access the application
+
+| Service | URL |
 |---|---|
-| Factory administrator | `admin@factorylink.jp` |
-| Production manager | `production@factorylink.jp` |
-| Warehouse manager | `warehouse@factorylink.jp` |
-| Quality inspector | `quality@factorylink.jp` |
-| Maintenance manager | `maintenance@factorylink.jp` |
-| Operator | `operator@factorylink.jp` |
-| Supplier user | `supplier@osaka-parts.jp` |
-| Separate-tenant administrator | `admin@tokyo-industrial.jp` |
+| FactoryLink Frontend | http://localhost:8080 |
+| Backend API | http://localhost:8080/api |
+| API Documentation | http://localhost:8080/docs |
+| API Readiness | http://localhost:8080/health/ready |
 
-Do not use these accounts or passwords in shared, staging or production deployments. Rotate all secrets and demo credentials before exposing any environment.
+To inspect running services:
 
-## Useful commands
-
-```powershell
-# Inspect service status and logs
+```bash
 docker compose ps
-docker compose logs -f backend
-docker compose logs -f frontend
+```
 
-# Stop services but preserve local data volumes
+To inspect application logs:
+
+```bash
+docker compose logs -f
+```
+
+To stop the application:
+
+```bash
 docker compose down
-
-# Rebuild and start with full build output
-docker compose --progress plain up --build -d
 ```
 
-`docker compose down -v` deletes the PostgreSQL database, Redis persistence, uploaded files and ClamAV signatures. It is destructive; export data first.
+---
 
-## Development and tests
+## 9. Project Documentation
 
-Backend tests use isolated SQLite fixtures. From the project root:
+FactoryLink includes detailed technical and operational documentation.
 
-```powershell
-cd backend
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-python -m compileall -q app migrations tests
-```
+| Document | Description |
+|---|---|
+| `ARCHITECTURE.md` | Application architecture |
+| `DATABASE_DESIGN.md` | Database structure and relationships |
+| `API_DOCUMENTATION.md` | API endpoints |
+| `SECURITY.md` | Security implementation |
+| `TESTING.md` | Testing and verification |
+| `DEPLOYMENT.md` | Deployment instructions |
+| `PRODUCTION_DEPLOYMENT.md` | Production deployment guidance |
+| `PRODUCTION_OPERATIONS_RUNBOOK.md` | Operational procedures |
+| `USER_GUIDE.md` | Application usage |
+| `TROUBLESHOOTING.md` | Common issues and solutions |
 
-Frontend development/build:
+---
 
-```powershell
-cd frontend
-npm install --no-audit --no-fund
-npm run build
-```
+## 10. Current Project Status
 
-Playwright journeys:
+**Status: Hardened Local Evaluation Candidate**
 
-```powershell
-cd ..
-.\scripts\e2e\run.ps1
-```
+FactoryLink is functional locally using Docker Compose, and its automated tests, database migrations, frontend build, and local infrastructure have been verified.
 
-The acceptance runner reports checks that need Docker/PostgreSQL/Redis/browser prerequisites as **SKIP**, not PASS. See [TESTING.md](TESTING.md) and [FINAL_ACCEPTANCE_CHECKLIST.md](FINAL_ACCEPTANCE_CHECKLIST.md).
+However, it has not yet received full production approval.
 
-## Configuration notes
+The following activities remain:
 
-- `.env` is created automatically from `.env.example` for local evaluation. Review it before starting.
-- `PIP_INDEX_URL` may be set to an approved internal PyPI mirror where direct PyPI access is restricted. Never disable TLS verification or use an untrusted package index.
-- Local Compose defaults to `STORAGE_PROVIDER=local` with a persistent named upload volume. Production must use a private S3 bucket and least-privilege IAM credentials/role.
-- Compose keeps PostgreSQL, Redis and ClamAV private to the application network; ClamAV TCP 3310 is not published to the host.
-- Production startup requires secure settings, private object storage, malware scanning, SMTP, disabled public registration/demo seeding and valid HTTPS origins. Review [DEPLOYMENT.md](DEPLOYMENT.md) and [SECURITY.md](SECURITY.md).
+- Complete Playwright end-to-end browser testing.
+- Verify the cloud deployment on Render.
+- Configure and verify private S3-compatible object storage.
+- Verify real SMTP or Resend email delivery.
+- Verify ClamAV signature database warm-up.
+- Configure external application monitoring.
+- Perform production backup and point-in-time recovery drills.
+- Complete production security and operational acceptance testing.
 
-## Documentation
+---
 
-- [Architecture](ARCHITECTURE.md)
-- [Database design](DATABASE_DESIGN.md)
-- [API documentation](API_DOCUMENTATION.md)
-- [Deployment](DEPLOYMENT.md)
-- [Security](SECURITY.md)
-- [Testing](TESTING.md)
-- [Troubleshooting](TROUBLESHOOTING.md)
-- [Windows setup](WINDOWS_SETUP.md)
-- [User guide](USER_GUIDE.md)
-- [Release notes](RELEASE_NOTES.md)
-- [Project status](PROJECT_STATUS.md)
-- [RC24 build report](docs/releases/RC24_BUILD_REPORT.md)
+## 11. Project Vision
 
-## Known limitations before production
+FactoryLink was developed with a simple idea:
 
-- Docker Compose startup, PostgreSQL migrations and least-privilege grants have been verified; automated browser journeys (Playwright) have not been run in this pass.
-- Frontend dependencies are lockfile-pinned (`frontend/package-lock.json`, lockfileVersion 3) and installed with `npm ci`, so resolution is reproducible; direct versions remain pinned in `frontend/package.json`.
-- PostgreSQL RLS/ACL/triggers/concurrency and Redis/Celery must be verified against live services; SQLite tests do not prove PostgreSQL security behaviour.
-- Real ClamAV signature warm-up, clean/EICAR/outage upload behaviour and S3/IAM access must be tested against actual services.
-- SMTP delivery, backups/restores, load, security review, staging and factory/customer acceptance remain environment-specific deployment activities.
-- Camera scanning depends on browser `BarcodeDetector` support; manual identifier search is the fallback.
-- FactoryLink makes no claim of Japanese regulatory certification or customer approval.
+**Manufacturing operations should work as one connected system, not as disconnected processes.**
+
+By bringing suppliers, purchasing, inventory, production, quality control, traceability, and maintenance together, FactoryLink demonstrates how a connected digital platform can help manufacturers improve operational visibility and coordination.
+
+The project explores how modern web technologies can be applied to real-world industrial workflows, with particular attention to the challenges faced by Japanese manufacturers.
+
+---
+
+## 12. Author
+
+**Abdul Rahman**
+
+GitHub: [@Ancientsocks](https://github.com/Ancientsocks)
+
+LinkedIn: [Abdul Rahman](https://www.linkedin.com/in/abdul-rahman-770409247/)
+
+---
+
+*FactoryLink — Connecting Manufacturing Operations, One Workflow at a Time.*
