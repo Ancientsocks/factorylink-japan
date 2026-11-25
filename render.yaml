@@ -1,0 +1,16 @@
+# FactoryLink staged Render Blueprint — step 1: PostgreSQL only.
+# Create/sync this Blueprint first. Do not add application services until the
+# database is healthy and the restricted factorylink_app credential is created.
+# The same Blueprint will be updated with application services in step 2.
+previews:
+  generation: off
+
+databases:
+  - name: factorylink-postgres
+    databaseName: factorylink
+    user: factorylink_owner
+    region: singapore
+    postgresMajorVersion: "17"
+    plan: 0.5c-1g
+    diskSizeGB: 15
+    ipAllowList: []

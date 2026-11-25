@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-11-03T12:07:13.837641+00:00",
+  "project_version": "1.0.0-rc.21",
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 5
+  },
+  "results": [
+    {
+      "name": "Backend regression suite",
+      "status": "PASS",
+      "detail": "127 passed in 28.11s (`python -m pytest -q` from backend/)."
+    },
+    {
+      "name": "Python compile check",
+      "status": "PASS",
+      "detail": "`python -m compileall -q backend/app backend/migrations backend/tests` completed."
+    },
+    {
+      "name": "Fresh Alembic migration",
+      "status": "PASS",
+      "detail": "A clean temporary SQLite database migrated through head."
+    },
+    {
+      "name": "Demo seed first run",
+      "status": "PASS",
+      "detail": "Demo seed completed; secrets redacted from logs."
+    },
+    {
+      "name": "Demo seed idempotency",
+      "status": "PASS",
+      "detail": "Second seed run completed without duplicate tenant/demo records."
+    },
+    {
+      "name": "Live API factory/supplier full manufacturing workflow",
+      "status": "PASS",
+      "detail": "Live Uvicorn health/metrics, factory dashboard, supplier PO visibility and denial boundaries, linked receipt (12/12 kg), production completion, failed inspection, hold and traceability passed."
+    },
+    {
+      "name": "Docker Compose configuration and runtime",
+      "status": "SKIP",
+      "detail": "Docker and Podman are unavailable. Compose YAML/service/health dependency/private-port assertions were statically parsed; no container startup is claimed."
+    },
+    {
+      "name": "Real ClamAV 1.5 daemon and EICAR/clean upload",
+      "status": "SKIP",
+      "detail": "Requires Docker-enabled runtime. Scanner protocol unit tests use a fake clamd server only; actual signature database and upload-path acceptance remain unverified."
+    },
+    {
+      "name": "PostgreSQL 17 RLS/ACL/trigger acceptance",
+      "status": "SKIP",
+      "detail": "PostgreSQL server/client tools are unavailable on this host."
+    },
+    {
+      "name": "Redis and Celery runtime acceptance",
+      "status": "SKIP",
+      "detail": "Redis server/client services are unavailable on this host."
+    },
+    {
+      "name": "Vite production build and Playwright browser journeys",
+      "status": "SKIP",
+      "detail": "frontend/node_modules is absent; npm registry DNS/network access failed, so dependency-backed build and real browser journeys were not executed."
+    }
+  ]
+}

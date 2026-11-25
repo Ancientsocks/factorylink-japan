@@ -1,0 +1,37 @@
+.env
+.env.production
+# Local overrides such as VITE_PROXY_TARGET must never be committed.
+.env.local
+.env.*.local
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+node_modules/
+dist/
+frontend/dist/
+backend/data/uploads/*
+!backend/data/uploads/.gitkeep
+*.log
+.DS_Store
+Thumbs.db
+
+# Local database and uploads backups contain sensitive company data.
+.backups/
+
+# Generated local acceptance reports
+factorylink-acceptance*.json
+acceptance-report*.json
+
+# Never commit local backup files
+*.bak
+*.tsbuildinfo
+*.sqlite3
+
+# Environment files and secrets
+.env.*
+!.env.example
+!.env.production.example

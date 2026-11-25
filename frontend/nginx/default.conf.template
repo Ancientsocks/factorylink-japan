@@ -1,0 +1,134 @@
+# The trusted outer proxy must overwrite X-Forwarded-For with the client IP.
+# Fall back to the socket address for direct local development traffic.
+map $http_x_forwarded_for $factorylink_client_ip {
+    ""      $binary_remote_addr;
+    default $http_x_forwarded_for;
+}
+
+# Apply basic edge throttling to credential-creation and login endpoints.
+limit_req_zone $factorylink_client_ip zone=factorylink_auth:10m rate=10r/m;
+limit_req_status 429;
+
+# TLS terminates at the public hosting edge. Only emit HSTS when that trusted
+# edge reports HTTPS; local HTTP evaluation must not cache an HSTS policy.
+map $http_x_forwarded_proto $factorylink_hsts {
+    default "";
+    https "max-age=31536000";
+}
+
+server {
+    listen 10000;
+    server_tokens off;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    client_max_body_size 12m;
+    access_log off;
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-Frame-Options DENY always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+    add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+    add_header Cross-Origin-Opener-Policy same-origin always;
+    add_header Cross-Origin-Resource-Policy same-origin always;
+    add_header Strict-Transport-Security $factorylink_hsts always;
+
+    location = /api/v1/auth/login {
+        limit_req zone=factorylink_auth burst=10 nodelay;
+        proxy_pass http://${BACKEND_HOST}/api/v1/auth/login;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/v1/organizations/register {
+        limit_req zone=factorylink_auth burst=5 nodelay;
+        proxy_pass http://${BACKEND_HOST}/api/v1/organizations/register;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/v1/auth/password-reset/request {
+        limit_req zone=factorylink_auth burst=3 nodelay;
+        proxy_pass http://${BACKEND_HOST}/api/v1/auth/password-reset/request;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/v1/auth/password-reset/confirm {
+        limit_req zone=factorylink_auth burst=5 nodelay;
+        proxy_pass http://${BACKEND_HOST}/api/v1/auth/password-reset/confirm;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /api/v1/users/invitations/accept {
+        limit_req zone=factorylink_auth burst=5 nodelay;
+        proxy_pass http://${BACKEND_HOST}/api/v1/users/invitations/accept;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /api/ {
+        proxy_pass http://${BACKEND_HOST};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    location = /health {
+        proxy_pass http://${BACKEND_HOST}/health;
+        proxy_set_header Host $host;
+    }
+
+    location = /health/ready {
+        proxy_pass http://${BACKEND_HOST}/health/ready;
+        proxy_set_header Host $host;
+    }
+
+    location = /health/live {
+        proxy_pass http://${BACKEND_HOST}/health/live;
+        proxy_set_header Host $host;
+    }
+
+    # Keep FastAPI's interactive OpenAPI docs reachable through the same local origin.
+    location = /docs {
+        proxy_pass http://${BACKEND_HOST}/docs;
+        proxy_set_header Host $host;
+    }
+    location = /openapi.json {
+        proxy_pass http://${BACKEND_HOST}/openapi.json;
+        proxy_set_header Host $host;
+    }
+    location = /redoc {
+        proxy_pass http://${BACKEND_HOST}/redoc;
+        proxy_set_header Host $host;
+    }
+
+    # Apply the restrictive application CSP to the SPA/static frontend. The
+    # exact /docs location above intentionally retains Swagger's own inline
+    # initializer; API responses are not executable browser documents.
+    location / {
+        add_header X-Content-Type-Options nosniff always;
+        add_header X-Frame-Options DENY always;
+        add_header Referrer-Policy strict-origin-when-cross-origin always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self' data:" always;
+        add_header Permissions-Policy "camera=(self), microphone=(), geolocation=()" always;
+        add_header Cross-Origin-Opener-Policy same-origin always;
+        add_header Cross-Origin-Resource-Policy same-origin always;
+        add_header Strict-Transport-Security $factorylink_hsts always;
+        try_files $uri $uri/ /index.html;
+    }
+}

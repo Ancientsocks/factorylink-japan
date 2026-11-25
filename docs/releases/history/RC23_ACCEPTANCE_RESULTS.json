@@ -1,0 +1,81 @@
+{
+  "release": "1.0.0-rc.23",
+  "date": "2026-11-03",
+  "status": "hardened_local_candidate_not_production_approved",
+  "rc23_verification": {
+    "local_acceptance_runner": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 6,
+      "backend_tests_skipped_by_flag": true
+    },
+    "python_compileall": "passed",
+    "fresh_sqlite_alembic_upgrade": "passed through 0007_quality_capa_serial_traceability",
+    "demo_seed_first_run": "passed",
+    "demo_seed_repeat_run": "passed",
+    "live_api_manufacturing_workflow": "passed",
+    "backend_test_groups_rerun": {
+      "non_api_regression_groups": {
+        "passed": 59,
+        "failed": 0,
+        "files": [
+          "test_release_integrity.py",
+          "test_admin_bootstrap.py",
+          "test_render_deploy.py",
+          "test_mailer.py",
+          "test_malware_scanner.py",
+          "test_object_storage.py"
+        ]
+      },
+      "focused_core_workflow_api_cases": {
+        "passed": 3,
+        "failed": 0,
+        "cases": [
+          "quality template and CAPA lifecycle",
+          "finished serial QR genealogy and shipment",
+          "maintenance downtime analytics"
+        ]
+      }
+    },
+    "static_checks": {
+      "python_compileall": "passed",
+      "yaml_parse": [
+        "docker-compose.yml",
+        "render.yaml",
+        ".github/workflows/ci.yml"
+      ],
+      "compose_services": 9,
+      "bash_syntax": [
+        "scripts/start.sh",
+        "scripts/e2e/run.sh",
+        "scripts/backup/backup.sh",
+        "scripts/backup/restore.sh",
+        "scripts/db/postgres-acceptance.sh"
+      ],
+      "k6_javascript_syntax": "passed"
+    }
+  },
+  "inherited_rc22_recorded_results": {
+    "backend_tests": {
+      "passed": 130,
+      "failed": 0,
+      "note": "Prior RC22 grouped test result; not rerun as a complete suite for RC23."
+    },
+    "focused_rc22_workflow_tests": {
+      "passed": 3,
+      "included_in_backend_tests_total": true
+    },
+    "frontend_transpile_syntax_diagnostics": 0
+  },
+  "not_executed": [
+    "Docker Compose image build and runtime",
+    "Frontend dependency-backed Vite typecheck/build and Playwright journeys",
+    "PostgreSQL 17 RLS/ACL/trigger/concurrency acceptance",
+    "Real Redis and Celery worker/scheduler execution",
+    "Real ClamAV signature warm-up, EICAR and clean-file upload acceptance",
+    "Real S3/IAM integration",
+    "Backup/restore drill, load test, independent security review, staging and factory customer acceptance",
+    "Frontend package-lock generation; no package-lock.json is present and npm registry access was unavailable here."
+  ],
+  "docker_pip_error": "Not reproduced in this environment; the user's pasted Docker summary omitted the actual pip error lines. RC23 uses runtime-only pinned dependencies, binary wheels and visible plain-progress build output to improve diagnosis."
+}

@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-11-03T11:38:35.782423+00:00",
+  "project_version": "1.0.0-rc.18",
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 5
+  },
+  "results": [
+    {
+      "name": "Backend regression suite",
+      "status": "PASS",
+      "detail": "........................................................................ [ 73%]\n..........................                                               [100%]\n98 passed in 21.99s"
+    },
+    {
+      "name": "Python compile check",
+      "status": "PASS",
+      "detail": "completed"
+    },
+    {
+      "name": "Fresh Alembic migration",
+      "status": "PASS",
+      "detail": " replay.\nINFO  [alembic.runtime.migration] Running upgrade 0002_po_receipt_link -> 0003_refresh_token_families, Track refresh token families and revoke descendants on replay.\nINFO  [alembic.runtime.migration] Running upgrade 0003_refresh_token_families -> 0004_postgresql_tenant_rls, Add PostgreSQL row-level security to tenant-owned operational tables.\nINFO  [alembic.runtime.migration] Running upgrade 0003_refresh_token_families -> 0004_postgresql_tenant_rls, Add PostgreSQL row-level security to tenant-owned operational tables.\nINFO  [alembic.runtime.migration] Running upgrade 0004_postgresql_tenant_rls -> 0005_account_lifecycle, Add one-time invitation and password-reset tokens.\nINFO  [alembic.runtime.migration] Running upgrade 0004_postgresql_tenant_rls -> 0005_account_lifecycle, Add one-time invitation and password-reset tokens.\nINFO  [alembic.runtime.migration] Running upgrade 0005_account_lifecycle -> 0006_supplier_receipt_progress, Expose factory-confirmed PO receipt totals to linked suppliers safely.\nINFO  [alembic.runtime.migration] Running upgrade 0005_account_lifecycle -> 0006_supplier_receipt_progress, Expose factory-confirmed PO receipt totals to linked suppliers safely."
+    },
+    {
+      "name": "Demo seed first run",
+      "status": "PASS",
+      "detail": "FactoryLink demo data is ready. Demo password: [redacted demo password]"
+    },
+    {
+      "name": "Demo seed idempotency",
+      "status": "PASS",
+      "detail": "FactoryLink demo data is ready. Demo password: [redacted demo password]"
+    },
+    {
+      "name": "Live API factory/supplier and full manufacturing workflow",
+      "status": "PASS",
+      "detail": "health, metrics, factory dashboard, supplier PO visibility/denials, linked receipt (12.0/12 kg), production completion, failed quality inspection and traceability (4 event types)"
+    },
+    {
+      "name": "Docker Compose configuration",
+      "status": "SKIP",
+      "detail": "opt in with --with-docker-config"
+    },
+    {
+      "name": "Docker Compose isolated runtime",
+      "status": "SKIP",
+      "detail": "opt in with --with-docker-runtime; uses an isolated project name and temporary volumes"
+    },
+    {
+      "name": "Vite production build",
+      "status": "SKIP",
+      "detail": "opt in with --with-frontend-build after npm install"
+    },
+    {
+      "name": "Playwright browser journeys",
+      "status": "SKIP",
+      "detail": "opt in with --with-browser-e2e after frontend install and Playwright browser setup"
+    },
+    {
+      "name": "PostgreSQL/Redis/Celery acceptance",
+      "status": "SKIP",
+      "detail": "requires PostgreSQL 17, Redis, drivers and explicit --with-postgres"
+    }
+  ]
+}

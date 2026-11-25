@@ -1,0 +1,12 @@
+{$FRONTEND_DOMAIN} {
+    tls {$ACME_EMAIL}
+    encode zstd gzip
+
+    header {
+        -Server
+    }
+
+    reverse_proxy frontend:10000 {
+        header_up X-Forwarded-For {remote_host}
+    }
+}

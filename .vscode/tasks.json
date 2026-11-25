@@ -1,0 +1,2638 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "FactoryLink Compose config validation",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"config",
+				"--quiet"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build backend and migrate images",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache",
+				"backend",
+				"migrate"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build all FactoryLink images",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check Compose service state",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"ps",
+				"--all"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect FactoryLink Docker volumes",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"volume",
+				"ls",
+				"--filter",
+				"name=factorylink"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start FactoryLink Compose stack",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--progress",
+				"plain",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect database bootstrap error",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"logs",
+				"--no-color",
+				"db-bootstrap"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect bootstrap command arguments",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{json .Config.Entrypoint}} {{json .Config.Cmd}} exit={{.State.ExitCode}}",
+				"factorylink-db-bootstrap-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Recheck Compose config",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"config",
+				"--quiet"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retry FactoryLink startup",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--progress",
+				"plain",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect migration startup error",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"logs",
+				"--no-color",
+				"migrate"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Rebuild backend and migrate after fix",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache",
+				"backend",
+				"migrate"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retry migrations and startup",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--progress",
+				"plain",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify FactoryLink service health",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"ps",
+				"--all"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Redis ping and migration head",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"redis",
+				"redis-cli",
+				"ping"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify applied migration revision",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"alembic",
+				"current"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify backend readiness dependencies",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import urllib.request; response = urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5); print(response.status, response.read().decode())"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check API readiness response",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import urllib.request; response = urllib.request.urlopen(\"http://127.0.0.1:8000/health/ready\", timeout=5); print(response.status, response.read().decode())"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect Celery task command options",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"--help"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Celery worker responds",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"-A",
+				"app.celery_app.celery_app",
+				"inspect",
+				"ping",
+				"--timeout=5"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify registered Celery tasks",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"-A",
+				"app.celery_app.celery_app",
+				"inspect",
+				"registered",
+				"--timeout=5"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect Celery task invocation options",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"call",
+				"--help"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Enqueue real maintenance reminder task",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"-A",
+				"app.celery_app.celery_app",
+				"call",
+				"app.tasks.create_maintenance_reminders"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retrieve Celery task result",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"-A",
+				"app.celery_app.celery_app",
+				"result",
+				"82c4e404-c7f3-4e32-8925-c49ed9818ca3"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify Celery scheduler startup",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"logs",
+				"--no-color",
+				"scheduler",
+				"worker"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read safe database identifiers",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"printenv",
+				"POSTGRES_USER",
+				"POSTGRES_DB"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Record seed data counts",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT (SELECT count(*) FROM organizations), (SELECT count(*) FROM users);"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify repeatable demo seeding",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"run",
+				"--rm",
+				"--no-deps",
+				"migrate"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm seed data counts unchanged",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT (SELECT count(*) FROM organizations), (SELECT count(*) FROM users);"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run local acceptance checks",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"scripts\\acceptance\\run.py",
+				"--skip-backend-tests"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run focused migration regression tests",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests\\test_release_integrity.py",
+				"backend\\tests\\test_api.py::test_rls_migration_covers_every_operational_tenant_model"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify PostgreSQL revision column width",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT character_maximum_length FROM information_schema.columns WHERE table_name = 'alembic_version' AND column_name = 'version_num';"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm revision column length",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT character_maximum_length FROM information_schema.columns WHERE table_name = $$alembic_version$$ AND column_name = $$version_num$$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage role verification SQL",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\verify-runtime-role.sql",
+				"factorylink-db-1:/tmp/verify-runtime-role.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage RLS verification SQL",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\verify-rls.sql",
+				"factorylink-db-1:/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify PostgreSQL runtime role privileges",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-runtime-role.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify PostgreSQL tenant RLS",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Test manufacturer inventory policy",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests\\test_release_integrity.py::test_postgresql_material_batches_restrictive_policy_excludes_supplier_orgs"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Rebuild updated database migration",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache",
+				"backend",
+				"migrate"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Apply RLS correction and restart",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--progress",
+				"plain",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retry PostgreSQL tenant isolation check",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage PostgreSQL API smoke script",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\postgres-api-smoke.py",
+				"factorylink-backend-1:/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run PostgreSQL runtime API smoke test",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"-e",
+				"FACTORYLINK_BASE_URL=http://backend:8000",
+				"backend",
+				"python",
+				"/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect PostgreSQL API failure",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"logs",
+				"--no-color",
+				"--tail",
+				"100",
+				"backend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect notification RLS policies",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT policyname || ':' || cmd || ':' || coalesce(qual, $$NULL$$) || ':' || coalesce(with_check, $$NULL$$) FROM pg_policies WHERE tablename = $$notifications$$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read notification RLS definitions",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT policyname,cmd,qual,with_check FROM pg_policies WHERE tablename = $$notifications$$;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Trace runtime supplier notification scope",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"BEGIN; SET LOCAL ROLE factorylink_app; SELECT set_config($$app.current_organization_id$$,$$1$$,true); SELECT id,organization_id,supplier_organization_id FROM suppliers; SELECT id,org_type FROM organizations; ROLLBACK;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Reproduce notification RLS insert safely",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"BEGIN; SET LOCAL ROLE factorylink_app; SELECT set_config($$app.current_organization_id$$,$$1$$,true); INSERT INTO notifications (organization_id,title,body,level,is_read,created_at) VALUES (2,$$RLS TEST$$,$$rollback only$$,$$INFO$$,false,now()); ROLLBACK;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Reproduce notification insert via app session",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import app.database as d, app.models as m; s=d.SessionLocal(); d.set_tenant_context(s,1); s.add(m.Notification(organization_id=2,title=chr(84),body=chr(84),level=chr(73))); s.commit(); print(1); s.close()"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect tenant context in app session",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import sqlalchemy as a, app.database as d; s=d.SessionLocal(); d.set_tenant_context(s,1); q=a.select(a.func.current_setting(chr(97)+chr(112)+chr(112)+chr(46)+chr(99)+chr(117)+chr(114)+chr(114)+chr(101)+chr(110)+chr(116)+chr(95)+chr(111)+chr(114)+chr(103)+chr(97)+chr(110)+chr(105)+chr(122)+chr(97)+chr(116)+chr(105)+chr(111)+chr(110)+chr(95)+chr(105)+chr(100), True)); print(s.execute(q).scalar()); s.rollback(); s.close()"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read linked supplier as app session",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import app.database as d, app.models as m; from sqlalchemy import select; s=d.SessionLocal(); d.set_tenant_context(s,1); rows=s.scalars(select(m.Supplier).where(m.Supplier.organization_id==1)).all(); print([(x.id,x.organization_id,x.supplier_organization_id) for x in rows]); s.rollback(); s.close()"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Test notification ORM compatibility",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests\\test_api.py::test_supplier_to_receipt_production_quality_traceability_workflow",
+				"backend\\tests\\test_api.py::test_notification_unread_count_and_mark_all_are_tenant_scoped"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Rebuild backend notification behavior",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache",
+				"backend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Restart backend with notification fix",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"up",
+				"-d",
+				"backend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Restage PostgreSQL API smoke script",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\postgres-api-smoke.py",
+				"factorylink-backend-1:/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retry live PostgreSQL API smoke",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"-e",
+				"FACTORYLINK_BASE_URL=http://backend:8000",
+				"backend",
+				"python",
+				"/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final full image rebuild",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"build",
+				"--no-cache"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start final rebuilt Compose stack",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--progress",
+				"plain",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify final migration head",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"alembic",
+				"current"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Reverify final PostgreSQL RLS",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run complete backend test suite final",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final backend acceptance verbose",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-vv",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install frontend dependencies for acceptance",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"install",
+				"--no-audit",
+				"--no-fund",
+				"--package-lock=false"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build frontend for final acceptance",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run all Playwright acceptance journeys",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-vv",
+				"-o",
+				"pythonpath=backend",
+				"e2e"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install Playwright Chromium for E2E",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"playwright",
+				"install",
+				"chromium"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final full backend suite",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify maintenance task result",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"backend",
+				"celery",
+				"-A",
+				"app.celery_app.celery_app",
+				"result",
+				"dcd48ef3-6782-4b28-a67a-226a1af1770c"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Playwright E2E final rerun",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"e2e"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Diagnose failing browser workflows",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"set FACTORYLINK_KEEP_E2E_LOGS=1 && C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe -m pytest -q -o pythonpath=backend e2e\\test_browser_journeys.py::test_factory_admin_can_navigate_modules_switch_japanese_and_export e2e\\test_browser_journeys.py::test_factory_supplier_receipt_quality_and_traceability_workflow"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final Playwright acceptance with logs",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"set FACTORYLINK_KEEP_E2E_LOGS=1 && C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe -m pytest -q -o pythonpath=backend e2e"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retest procurement and invitation flows",
+			"type": "shell",
+			"command": "C:\\Users\\sam\\Downloads\\FactoryLink-Japan-Complete-Release\\FactoryLink\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"e2e\\test_browser_journeys.py::test_factory_supplier_receipt_quality_and_traceability_workflow",
+				"e2e\\test_browser_journeys.py::test_user_invitation_activates_account_with_assigned_role"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run frontend unit tests with Vitest",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"run",
+				"test"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "Apply reviewed PostgreSQL workflow column grants",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-v",
+				"ON_ERROR_STOP=1",
+				"-c",
+				"GRANT UPDATE (is_active) ON TABLE public.quality_templates TO factorylink_app; GRANT UPDATE (status, containment_action, root_cause, corrective_action, preventive_action, verification, owner, due_date, updated_at, closed_at) ON TABLE public.corrective_actions TO factorylink_app; GRANT UPDATE (status, customer_name, shipment_reference, shipped_at) ON TABLE public.finished_product_serials TO factorylink_app; GRANT UPDATE (maintenance_type) ON TABLE public.maintenance_tasks TO factorylink_app;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Generate locked frontend dependencies",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"install",
+				"--package-lock-only",
+				"--ignore-scripts",
+				"--no-audit",
+				"--no-fund"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install locked frontend dependencies",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"ci",
+				"--no-audit",
+				"--no-fund"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Validate production Compose configuration",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--env-file",
+				".env.production.example",
+				"-f",
+				"docker-compose.production.yml",
+				"config",
+				"--quiet"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Frontend test suite and build",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd frontend && npm test && npm run build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Frontend production build",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"cd frontend && npm run build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run focused App UI Vitest suite",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"test",
+				"--",
+				"src/test/App.test.tsx"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "FactoryLink production Compose config validation",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--env-file",
+				".env.production.example",
+				"-f",
+				"docker-compose.production.yml",
+				"config",
+				"--quiet"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build FactoryLink production images",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"--env-file",
+				".env.production.example",
+				"-f",
+				"docker-compose.production.yml",
+				"build",
+				"backend",
+				"frontend",
+				"backup-scheduler"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run FactoryLink backend tests",
+			"type": "shell",
+			"command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"backend\\tests"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run FactoryLink frontend tests",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"frontend",
+				"run",
+				"test"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run FactoryLink browser journeys",
+			"type": "shell",
+			"command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+			"args": [
+				"-m",
+				"pytest",
+				"-q",
+				"-o",
+				"pythonpath=backend",
+				"e2e"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Temporary read-only Docker inventory",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"docker version && docker info && docker compose ls && docker ps -a && docker volume ls"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read-only FactoryLink database and image check",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"docker inspect --format \"{{.Name}} image={{.Config.Image}} image_id={{.Image}}\" factorylink-backend-1 factorylink-migrate-1 factorylink-frontend-1 factorylink-db-1 factorylink-redis-1 && docker exec factorylink-db-1 psql -U factorylink -d factorylink -Atc \"SELECT version_num FROM alembic_version; SELECT 'organizations=' || count(*) FROM organizations; SELECT 'users=' || count(*) FROM users;\" && docker compose -p factorylink-staging-20261105-0108 -f docker-compose.staging.yml ps -a && docker compose config --services && docker volume inspect factorylink_postgres_data factorylink_redis_data factorylink_factorylink_uploads factorylink_clamav_database"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read current development database revision",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-db-1",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT version_num FROM alembic_version"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm staging project unused",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"ps",
+				"-a"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read development Compose services",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"config",
+				"--services"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect existing FactoryLink volumes",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"volume",
+				"inspect",
+				"factorylink_postgres_data",
+				"factorylink_redis_data",
+				"factorylink_factorylink_uploads",
+				"factorylink_clamav_database"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect running FactoryLink image IDs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{.Name}} {{.Config.Image}} {{.Image}}",
+				"factorylink-backend-1",
+				"factorylink-migrate-1",
+				"factorylink-frontend-1",
+				"factorylink-db-1",
+				"factorylink-redis-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Count existing development records",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-db-1",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT count(*) FROM organizations; SELECT count(*) FROM users;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Validate isolated staging Compose",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"config",
+				"--quiet"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Confirm staging volumes do not exist",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"volume",
+				"ls",
+				"--filter",
+				"name=factorylink-staging-20261105-0108"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect latest production image IDs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"image",
+				"inspect",
+				"--format",
+				"{{.RepoTags}} {{.Id}}",
+				"factorylink-production-backend:latest",
+				"factorylink-production-frontend:latest"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start isolated FactoryLink staging",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"up",
+				"-d"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check isolated staging services",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"ps",
+				"-a"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging Alembic current revision",
+			"type": "docker",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"alembic",
+				"current"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging Alembic heads",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"alembic",
+				"heads"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check staging Redis connectivity",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"redis",
+				"redis-cli",
+				"-a",
+				"staging-redis-only",
+				"ping"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check staging API readiness",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"import urllib.request; r=urllib.request.urlopen('http://127.0.0.1:8000/health/ready',timeout=5); print(r.status, r.read().decode())"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging image binding",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{.Name}} {{.Image}}",
+				"factorylink-staging-20261105-0108-backend-1",
+				"factorylink-staging-20261105-0108-frontend-1",
+				"factorylink-staging-20261105-0108-migrate-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging Alembic revision",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"alembic",
+				"current"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging host readiness endpoint",
+			"type": "shell",
+			"command": "curl.exe",
+			"args": [
+				"--fail",
+				"--show-error",
+				"--include",
+				"http://127.0.0.1:18080/health/ready"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect staging frontend port bindings",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"inspect",
+				"--format",
+				"{{json .HostConfig.PortBindings}} {{json .NetworkSettings.Ports}}",
+				"factorylink-staging-20261105-0108-frontend-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging frontend logs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"logs",
+				"--no-color",
+				"--tail",
+				"80",
+				"frontend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging backend recent logs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"logs",
+				"--no-color",
+				"--tail",
+				"80",
+				"backend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Apply localhost-only staging frontend ingress",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"up",
+				"-d",
+				"--no-deps",
+				"frontend"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Seed fictional staging tenant fixtures",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"--profile",
+				"acceptance",
+				"-f",
+				"docker-compose.staging.yml",
+				"run",
+				"--rm",
+				"seed"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage PostgreSQL RLS verification SQL",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\verify-rls.sql",
+				"factorylink-staging-20261105-0108-db-1:/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging RLS restricted role checks",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-rls.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage restricted runtime role SQL",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\verify-runtime-role.sql",
+				"factorylink-staging-20261105-0108-db-1:/tmp/verify-runtime-role.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging runtime role privileges",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-v",
+				"runtime_db_user=factorylink_app",
+				"-f",
+				"/tmp/verify-runtime-role.sql"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage staging PostgreSQL API workflow",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\postgres-api-smoke.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging PostgreSQL procurement traceability workflow",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"FACTORYLINK_BASE_URL=http://backend:8000",
+				"backend",
+				"python",
+				"/tmp/postgres-api-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage staging Redis rate-limit acceptance",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\redis-rate-limit-smoke.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/redis-rate-limit-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging Redis rate-limit acceptance",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"/tmp/redis-rate-limit-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retry staging Redis rate-limit acceptance",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"PYTHONPATH=/app",
+				"backend",
+				"python",
+				"/tmp/redis-rate-limit-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Prepare isolated migration safety workspace",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"mkdir",
+				"-p",
+				"/tmp/factorylink/backend",
+				"/tmp/factorylink/scripts/db"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Copy migration source app to staging",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"backend\\app",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/factorylink/backend/"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Copy migration revisions to staging",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"backend\\migrations",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/factorylink/backend/"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Copy Alembic config to staging",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"backend\\alembic.ini",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/factorylink/backend/alembic.ini"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Copy migration safety harness to staging",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\migration-safety.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/factorylink/scripts/db/migration-safety.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging migration failure recovery drill",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"DATABASE_URL=postgresql+psycopg://staging_owner:staging-owner-only@db:5432/factorylink",
+				"-e",
+				"RUNTIME_DB_USER=factorylink_app",
+				"-e",
+				"PYTHONPATH=/tmp/factorylink/backend",
+				"backend",
+				"python",
+				"/tmp/factorylink/scripts/db/migration-safety.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage Celery smoke test",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\db\\celery-smoke.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/celery-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging Celery reminder task",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"PYTHONPATH=/app",
+				"backend",
+				"python",
+				"/tmp/celery-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging browser workflows",
+			"type": "shell",
+			"command": "cmd.exe",
+			"args": [
+				"/c",
+				"set \"FACTORYLINK_E2E_BASE_URL=http://127.0.0.1:18080\" && \".venv\\Scripts\\python.exe\" -m pytest -q -o pythonpath=backend e2e/test_browser_journeys.py::test_factory_admin_can_navigate_modules_switch_japanese_and_export e2e/test_browser_journeys.py::test_supplier_portal_exposes_only_supplier_modules e2e/test_browser_journeys.py::test_factory_supplier_receipt_quality_and_traceability_workflow"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect due staging maintenance work",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT current_date, count(*) FROM maintenance_tasks WHERE due_date <= current_date + 3 AND status IN ('SCHEDULED','OVERDUE');"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect due staging maintenance records",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT current_date, count(*) FROM maintenance_tasks WHERE due_date <= current_date + 3 AND status IN ($$SCHEDULED$$,$$OVERDUE$$);"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect staging maintenance reminder notifications",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT title, count(*) FROM notifications GROUP BY title ORDER BY title;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Redeliver staging maintenance task",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"PYTHONPATH=/app",
+				"backend",
+				"python",
+				"/tmp/celery-smoke.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Create staging document restore fixture",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"sh",
+				"-c",
+				"printf FactoryLink-staging-restore-drill > /app/data/uploads/restore-drill-fixture.txt"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Hash staging document backup source",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"sha256sum",
+				"/app/data/uploads/restore-drill-fixture.txt"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Archive staging uploads volume",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"tar",
+				"-C",
+				"/app/data/uploads",
+				"-cf",
+				"/tmp/factorylink-documents.tar",
+				"."
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Prepare isolated document restore directory",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"mkdir",
+				"/tmp/factorylink_documents_20261105_0108_restore_drill"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Restore staging document archive",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"tar",
+				"-C",
+				"/tmp/factorylink_documents_20261105_0108_restore_drill",
+				"-xf",
+				"/tmp/factorylink-documents.tar"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify restored document integrity",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-backend-1",
+				"sha256sum",
+				"/tmp/factorylink_documents_20261105_0108_restore_drill/restore-drill-fixture.txt"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Record staging restore drill source counts",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-Atc",
+				"SELECT version_num FROM alembic_version; SELECT count(*) FROM organizations; SELECT count(*) FROM users; SELECT count(*) FROM purchase_orders; SELECT count(*) FROM material_batches;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Create disposable restore drill database",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-db-1",
+				"createdb",
+				"-U",
+				"staging_owner",
+				"factorylink_20261105_0108_restore_drill"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Backup staging PostgreSQL database",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-db-1",
+				"pg_dump",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-Fc",
+				"-f",
+				"/tmp/factorylink-staging-20261105-0108.dump"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Restore staging database into scratch database",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-db-1",
+				"pg_restore",
+				"--single-transaction",
+				"--exit-on-error",
+				"--no-owner",
+				"--no-acl",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink_20261105_0108_restore_drill",
+				"/tmp/factorylink-staging-20261105-0108.dump"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify restored database data and revision",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-staging-20261105-0108-db-1",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink_20261105_0108_restore_drill",
+				"-Atc",
+				"SELECT version_num FROM alembic_version; SELECT count(*) FROM organizations; SELECT count(*) FROM users; SELECT count(*) FROM purchase_orders; SELECT count(*) FROM material_batches;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage manufacturing load harness",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"scripts\\load-test\\manufacturing_transactions.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/manufacturing_transactions.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run measured staging manufacturing load",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"-e",
+				"PYTHONPATH=/app",
+				"backend",
+				"python",
+				"-c",
+				"import json,os,runpy,urllib.request; body=json.dumps({\"email\":\"admin@factorylink.jp\",\"password\":\"FactoryLink2026!\"}).encode(); req=urllib.request.Request(\"http://backend:8000/api/v1/auth/login\",data=body,headers={\"Content-Type\":\"application/json\"}); token=json.loads(urllib.request.urlopen(req,timeout=10).read())[\"access_token\"]; os.environ.update({\"LOADTEST_BASE_URL\":\"http://backend:8000\",\"LOADTEST_BEARER_TOKEN\":token,\"LOADTEST_USERS\":\"5\",\"LOADTEST_DURATION_SECONDS\":\"60\",\"LOADTEST_MAX_OPERATIONS\":\"25\",\"LOADTEST_REQUESTS_PER_MINUTE\":\"90\",\"LOADTEST_P95_LIMIT_MS\":\"1000\"}); runpy.run_path(\"/tmp/manufacturing_transactions.py\",run_name=\"__main__\")"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage temporary load runner",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"C:\\Users\\sam\\.copilot\\session-state\\a33f79cb-8b34-4f59-a9bc-daef4a688312\\files\\run_staging_load.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/run_staging_load.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Stage temporary load environment",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"C:\\Users\\sam\\.copilot\\session-state\\a33f79cb-8b34-4f59-a9bc-daef4a688312\\files\\load.env",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/load.env"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run actual measured staging load",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"sh",
+				"-c",
+				"set -a; . /tmp/load.env; set +a; python /tmp/run_staging_load.py"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		},
+		{
+			"label": "Update staging load runner",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"cp",
+				"C:\\Users\\sam\\.copilot\\session-state\\a33f79cb-8b34-4f59-a9bc-daef4a688312\\files\\run_staging_load.py",
+				"factorylink-staging-20261105-0108-backend-1:/tmp/run_staging_load.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Capture staging resource metrics during load",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"stats",
+				"--no-stream",
+				"--format",
+				"{{.Name}} {{.CPUPerc}} {{.MemUsage}} {{.NetIO}} {{.BlockIO}}",
+				"factorylink-staging-20261105-0108-backend-1",
+				"factorylink-staging-20261105-0108-db-1",
+				"factorylink-staging-20261105-0108-redis-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging database workload counters",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"factorylink",
+				"-d",
+				"factorylink",
+				"-c",
+				"SELECT datname,numbackends,xact_commit,xact_rollback,tup_inserted,tup_updated FROM pg_stat_database WHERE datname='factorylink';"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging manufacturing load test",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"sh",
+				"-c",
+				"set -a; . /tmp/load.env; set +a; python /tmp/run_staging_load.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check development migration revision read-only",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"exec",
+				"factorylink-backend-1",
+				"alembic",
+				"current"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect current staging container metrics",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"stats",
+				"--no-stream",
+				"--format",
+				"{{.Name}} {{.CPUPerc}} {{.MemUsage}} {{.NetIO}} {{.BlockIO}}",
+				"factorylink-staging-20261105-0108-backend-1",
+				"factorylink-staging-20261105-0108-db-1",
+				"factorylink-staging-20261105-0108-redis-1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Read staging database workload counters 2",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-c",
+				"SELECT current_database(),numbackends,xact_commit,xact_rollback,tup_inserted,tup_updated FROM pg_stat_database WHERE datname=current_database();"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Count staging maintenance reminders before redelivery",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-c",
+				"SELECT title,count(*) FROM notifications GROUP BY title ORDER BY title;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging reminder task delivery A",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"from app.tasks import create_maintenance_reminders; print(create_maintenance_reminders.apply().get())"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Run staging reminder task delivery B",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"from app.tasks import create_maintenance_reminders; print(create_maintenance_reminders.apply().get())"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging Celery retry backoff safely",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"from app.tasks import send_transactional_email; r=send_transactional_email.apply_async(args=['staging-probe@example.invalid','SMTP retry probe','No mail should be sent']); result=r.get(timeout=70, propagate=False); print({'state':r.state,'result_type':type(result).__name__,'result':str(result)})"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Count staging maintenance reminders after redelivery",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"db",
+				"psql",
+				"-U",
+				"staging_owner",
+				"-d",
+				"factorylink",
+				"-c",
+				"SELECT title,count(*) FROM notifications GROUP BY title ORDER BY title;"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify staging Celery retry backoff safely 2",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"exec",
+				"-T",
+				"backend",
+				"python",
+				"-c",
+				"from app.tasks import send_transactional_email; r=send_transactional_email.apply_async(args=[1,2,3]); result=r.get(timeout=70, propagate=False); print(r.state, type(result).__name__, result)"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Inspect staging Celery retry logs",
+			"type": "shell",
+			"command": "docker",
+			"args": [
+				"compose",
+				"-p",
+				"factorylink-staging-20261105-0108",
+				"-f",
+				"docker-compose.staging.yml",
+				"logs",
+				"--no-color",
+				"--since",
+				"5m",
+				"worker"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

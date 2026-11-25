@@ -1,0 +1,188 @@
+# Local-only acceptance stack. Run with a unique project name, for example:
+# docker compose -p factorylink-staging-20261104 -f docker-compose.staging.yml up -d
+# Every database/Redis/upload volume is project-scoped and distinct from the
+# development and production Compose projects. Only the frontend joins the
+# localhost-published ingress network; backend/data services stay internal.
+# Do not reuse this file for prod.
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: staging_owner
+      POSTGRES_PASSWORD: staging-owner-only
+      POSTGRES_DB: factorylink
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U staging_owner -d factorylink"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [staging]
+
+  db-bootstrap:
+    image: postgres:17-alpine
+    environment:
+      PG_ADMIN_URL: postgresql://staging_owner:staging-owner-only@db:5432/factorylink
+      RUNTIME_DB_USER: factorylink_app
+      RUNTIME_DB_PASSWORD: staging-runtime-only
+      DATABASE_OWNER_ROLE: staging_owner
+    volumes:
+      - ./scripts/db/create-runtime-role.sql:/bootstrap/create-runtime-role.sql:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        psql "$${PG_ADMIN_URL}"
+        -v runtime_db_user="$${RUNTIME_DB_USER}"
+        -v runtime_db_password="$${RUNTIME_DB_PASSWORD}"
+        -v postgres_owner="$${DATABASE_OWNER_ROLE}"
+        -f /bootstrap/create-runtime-role.sql
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [staging]
+
+  redis:
+    image: redis:7-alpine
+    command: ["sh", "-ec", "exec redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\" --maxmemory 128mb --maxmemory-policy noeviction"]
+    environment:
+      REDIS_PASSWORD: staging-redis-only
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [staging]
+
+  migrate:
+    image: factorylink-production-backend:latest
+    environment:
+      DATABASE_URL: postgresql+psycopg://staging_owner:staging-owner-only@db:5432/factorylink
+      RUNTIME_DB_USER: factorylink_app
+      ENVIRONMENT: staging
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: "false"
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks: [staging]
+
+  seed:
+    image: factorylink-production-backend:latest
+    profiles: [acceptance]
+    environment:
+      DATABASE_URL: postgresql+psycopg://staging_owner:staging-owner-only@db:5432/factorylink
+      ENVIRONMENT: staging
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: "false"
+    command: ["python", "-m", "app.seed"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [staging]
+
+  backend:
+    image: factorylink-production-backend:latest
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: staging
+      DATABASE_URL: postgresql+psycopg://factorylink_app:staging-runtime-only@db:5432/factorylink
+      JWT_SECRET_KEY: factorylink-staging-only-not-for-production-2026
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_MINUTES: "20"
+      REFRESH_TOKEN_DAYS: "14"
+      REDIS_URL: redis://:staging-redis-only@redis:6379/0
+      CORS_ORIGINS: http://127.0.0.1:18080
+      SMTP_HOST: ""
+      SMTP_FROM: FactoryLink <no-reply@factorylink.local>
+      SMTP_STARTTLS: "true"
+      FRONTEND_BASE_URL: http://127.0.0.1:18080
+      EXPOSE_AUTH_ACTION_LINKS: "true"
+      ALLOW_PUBLIC_REGISTRATION: "false"
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: "false"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_FAIL_CLOSED: "true"
+      AUTH_RATE_LIMIT_PER_MINUTE: "10"
+      API_RATE_LIMIT_PER_MINUTE: "120"
+      MALWARE_SCAN_ENABLED: "false"
+      STORAGE_PROVIDER: local
+      UPLOAD_DIR: /app/data/uploads
+      TZ: Asia/Tokyo
+      LOG_LEVEL: INFO
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks: [staging]
+
+  worker:
+    image: factorylink-production-backend:latest
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://factorylink_app:staging-runtime-only@db:5432/factorylink
+      JWT_SECRET_KEY: factorylink-staging-only-not-for-production-2026
+      REDIS_URL: redis://:staging-redis-only@redis:6379/0
+      SMTP_HOST: ""
+      SMTP_FROM: FactoryLink <no-reply@factorylink.local>
+      TZ: Asia/Tokyo
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [staging]
+
+  scheduler:
+    image: factorylink-production-backend:latest
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "beat", "--loglevel=INFO"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://factorylink_app:staging-runtime-only@db:5432/factorylink
+      JWT_SECRET_KEY: factorylink-staging-only-not-for-production-2026
+      REDIS_URL: redis://:staging-redis-only@redis:6379/0
+      TZ: Asia/Tokyo
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [staging]
+
+  frontend:
+    image: factorylink-production-frontend:latest
+    restart: unless-stopped
+    environment:
+      BACKEND_HOST: backend:8000
+    ports:
+      - "127.0.0.1:18080:10000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [staging, staging_ingress]
+
+networks:
+  staging:
+    internal: true
+  staging_ingress:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:
+  uploads:

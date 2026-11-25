@@ -1,0 +1,66 @@
+{
+  "release": "1.0.0-rc.24",
+  "date": "2026-11-03",
+  "status": "core_complete_local_evaluation_candidate_not_production_approved",
+  "packaging_pass": {
+    "local_acceptance_runner": {
+      "passed": 5,
+      "failed": 0,
+      "skipped": 6,
+      "backend_regression_tests_intentionally_skipped": true,
+      "checks": [
+        "python compileall",
+        "fresh SQLite Alembic migration through 0007_quality_capa_serial_traceability",
+        "demo seed first run",
+        "demo seed idempotent repeat",
+        "live Uvicorn manufacturer/supplier workflow"
+      ]
+    },
+    "backend_regression_groups_rerun_for_rc24": {
+      "passed": 66,
+      "failed": 0,
+      "groups": {
+        "test_release_integrity_admin_bootstrap_render_deploy": 44,
+        "test_mailer_malware_scanner_object_storage": 19,
+        "focused_core_workflow_api_cases": 3
+      }
+    },
+    "inherited_rc22_backend_groups": {
+      "passed": 130,
+      "failed": 0,
+      "status": "historical_grouped_rc22_result_not_rerun_for_rc24"
+    }
+  },
+  "not_run": [
+    "Docker image build and Docker Compose runtime",
+    "npm install and frontend package-lock generation",
+    "dependency-backed TypeScript/Vite production build",
+    "Playwright browser journeys",
+    "PostgreSQL 17 RLS/ACL/triggers/concurrency",
+    "live Redis/Celery worker/scheduler",
+    "real ClamAV signature warm-up, clean/EICAR/outage upload checks",
+    "real S3/IAM tests",
+    "backup/restore drill",
+    "k6 load test",
+    "independent security/penetration review",
+    "staging deployment and customer/factory acceptance"
+  ],
+  "known_build_issue": {
+    "reported": "Docker pip install in backend/Dockerfile exited with code 1",
+    "root_cause": "not determinable because the supplied output omitted pip's actual error lines",
+    "rc24_mitigations": [
+      "runtime-only pinned dependencies",
+      "--only-binary=:all: to avoid implicit native source builds",
+      "bounded pip retries and timeouts",
+      "configurable PIP_INDEX_URL build argument",
+      "plain Compose progress from startup scripts"
+    ],
+    "root_cause_resolved": false
+  },
+  "frontend_lockfile": {
+    "present": false,
+    "reason": "npm registry access unavailable in packaging environment",
+    "direct_dependencies_pinned": true,
+    "transitive_dependencies_fully_locked": false
+  }
+}

@@ -1,0 +1,230 @@
+name: factorylink-production
+
+services:
+  db-bootstrap:
+    image: postgres:17-alpine
+    restart: "no"
+    environment:
+      PG_ADMIN_URL: ${PG_ADMIN_URL:?Set PG_ADMIN_URL to the PostgreSQL owner connection URL}
+      RUNTIME_DB_USER: ${RUNTIME_DB_USER:?Set a dedicated least-privilege runtime role name}
+      RUNTIME_DB_PASSWORD: ${RUNTIME_DB_PASSWORD:?Set a unique runtime role password}
+      DATABASE_OWNER_ROLE: ${DATABASE_OWNER_ROLE:?Set the PostgreSQL migration-owner role name}
+    volumes:
+      - ./scripts/db/create-runtime-role.sql:/bootstrap/create-runtime-role.sql:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        psql "$${PG_ADMIN_URL}"
+        -v runtime_db_user="$${RUNTIME_DB_USER}"
+        -v runtime_db_password="$${RUNTIME_DB_PASSWORD}"
+        -v postgres_owner="$${DATABASE_OWNER_ROLE}"
+        -f /bootstrap/create-runtime-role.sql
+    networks: [application]
+
+  migrate:
+    build:
+      context: ./backend
+    restart: "no"
+    environment:
+      DATABASE_URL: ${MIGRATION_DATABASE_URL:?Set TLS-enabled MIGRATION_DATABASE_URL}
+      SEED_DEMO_DATA: "false"
+      AUTO_CREATE_SCHEMA: "false"
+      TZ: Asia/Tokyo
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      db-bootstrap:
+        condition: service_completed_successfully
+    networks: [application]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["sh", "-ec", "exec redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\" --maxmemory 192mb --maxmemory-policy noeviction"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set a randomly generated Redis password}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [application]
+
+  clamav:
+    image: clamav/clamav:1.5
+    restart: unless-stopped
+    environment:
+      CLAMAV_NO_MILTERD: "true"
+      TZ: Asia/Tokyo
+    volumes:
+      - clamav_database:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping=1:1 --config-file=/etc/clamav/clamd.conf >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
+    networks: [application]
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?Set TLS-enabled RUNTIME_DATABASE_URL for the non-owner runtime role}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set a unique secret of at least 32 bytes}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-20}
+      REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-14}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379/0
+      CORS_ORIGINS: https://${FRONTEND_DOMAIN:?Set FRONTEND_DOMAIN}
+      SMTP_HOST: ${SMTP_HOST:?Set the company SMTP host}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:?Set a verified company sender address}
+      SMTP_STARTTLS: "true"
+      FRONTEND_BASE_URL: https://${FRONTEND_DOMAIN:?Set FRONTEND_DOMAIN}
+      EXPOSE_AUTH_ACTION_LINKS: "false"
+      RATE_LIMIT_ENABLED: "true"
+      RATE_LIMIT_FAIL_CLOSED: "true"
+      API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-120}
+      AUTH_RATE_LIMIT_PER_MINUTE: ${AUTH_RATE_LIMIT_PER_MINUTE:-10}
+      REGISTRATION_RATE_LIMIT_PER_MINUTE: ${REGISTRATION_RATE_LIMIT_PER_MINUTE:-5}
+      PASSWORD_RESET_RATE_LIMIT_PER_MINUTE: ${PASSWORD_RESET_RATE_LIMIT_PER_MINUTE:-3}
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: "false"
+      ALLOW_PUBLIC_REGISTRATION: "false"
+      MALWARE_SCAN_ENABLED: "true"
+      MALWARE_SCANNER_HOST: clamav
+      MALWARE_SCANNER_PORT: "3310"
+      STORAGE_PROVIDER: s3
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET:?Set a private, versioned S3 bucket}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION:-ap-northeast-1}
+      STORAGE_S3_ENDPOINT_URL: ${STORAGE_S3_ENDPOINT_URL:-}
+      STORAGE_S3_ACCESS_KEY_ID: ${STORAGE_S3_ACCESS_KEY_ID:-}
+      STORAGE_S3_SECRET_ACCESS_KEY: ${STORAGE_S3_SECRET_ACCESS_KEY:-}
+      UPLOAD_DIR: /app/data/uploads
+      TZ: Asia/Tokyo
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks: [application]
+
+  backup-scheduler:
+    build:
+      context: .
+      dockerfile: scripts/backup/production.Dockerfile
+    restart: unless-stopped
+    environment:
+      BACKUP_CRON_SCHEDULE: "${BACKUP_CRON_SCHEDULE:-15 1 * * *}"
+      PGSSLROOTCERT: /run/secrets/postgres-ca.pem
+      TZ: Asia/Tokyo
+    secrets:
+      - backup_env
+      - postgres_ca
+    networks: [application]
+
+  worker:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    environment:
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?Set TLS-enabled RUNTIME_DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379/0
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:?Set SMTP_FROM}
+      SMTP_STARTTLS: "true"
+      TZ: Asia/Tokyo
+    volumes:
+      - uploads:/app/data/uploads
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [application]
+
+  scheduler:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "beat", "--loglevel=INFO"]
+    environment:
+      DATABASE_URL: ${RUNTIME_DATABASE_URL:?Set TLS-enabled RUNTIME_DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD}@redis:6379/0
+      TZ: Asia/Tokyo
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [application]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_HOST: backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [application, edge]
+
+  edge:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:?Set FRONTEND_DOMAIN to a DNS name pointing at this host}
+      ACME_EMAIL: ${ACME_EMAIL:?Set an email for TLS certificate notices}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_UDP_PORT:-443}:443/udp"
+    volumes:
+      - ./deploy/production/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    networks: [edge]
+
+networks:
+  application:
+  edge:
+
+secrets:
+  backup_env:
+    file: ${BACKUP_ENV_FILE:?Set BACKUP_ENV_FILE to a protected backup environment file}
+  postgres_ca:
+    file: ${BACKUP_CA_FILE:?Set BACKUP_CA_FILE to the PostgreSQL CA certificate file}
+
+volumes:
+  redis_data:
+  clamav_database:
+  uploads:
+  caddy_data:
+  caddy_config:

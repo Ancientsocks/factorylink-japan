@@ -1,0 +1,6 @@
+export DATABASE_URL='postgresql://backup_reader:REPLACE_ME@db.example.jp:5432/factorylink?sslmode=verify-full'
+export STORAGE_S3_BUCKET='factorylink-private-production'
+export BACKUP_S3_URI='s3://factorylink-private-backups/factorylink'
+export BACKUP_AGE_RECIPIENT='age1REPLACE_WITH_PUBLIC_RECIPIENT'
+export BACKUP_KMS_KEY_ID='arn:aws:kms:ap-northeast-1:000000000000:key/REPLACE_ME'
+export AWS_DEFAULT_REGION='ap-northeast-1'

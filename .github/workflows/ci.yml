@@ -1,0 +1,169 @@
+name: FactoryLink CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: pip install pip-audit
+      - run: pip-audit -r requirements.txt
+      - run: python -m compileall -q app migrations tests
+      - run: pytest -q
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm audit --audit-level=high
+      - run: npm test
+      - run: npm run build
+  local-acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Install backend requirements
+        run: python -m pip install -r backend/requirements.txt
+      - name: Run migrations, idempotent seed and live API role smoke
+        run: python scripts/acceptance/run.py --skip-backend-tests --report /tmp/factorylink-acceptance.json
+      - name: Upload acceptance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factorylink-local-acceptance
+          path: /tmp/factorylink-acceptance.json
+          if-no-files-found: ignore
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            e2e/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install backend and browser-test dependencies
+        run: |
+          python -m pip install -r backend/requirements.txt -r e2e/requirements.txt
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+      - name: Install Chromium and system dependencies
+        run: python -m playwright install --with-deps chromium
+      - name: Run browser acceptance journeys
+        run: python -m pytest -q e2e
+
+  postgresql-acceptance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: factorylink
+          POSTGRES_PASSWORD: factorylink_ci_password
+          POSTGRES_DB: factorylink
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U factorylink -d factorylink"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGDATABASE: factorylink
+      PGUSER: factorylink
+      PGPASSWORD: factorylink_ci_password
+      RUNTIME_DB_USER: factorylink_app
+      RUNTIME_DB_PASSWORD: factorylink_ci_runtime_password
+      REDIS_URL: redis://127.0.0.1:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Install backend and database drivers
+        run: python -m pip install -r backend/requirements.txt
+      - name: Run PostgreSQL 17 RLS, ACL, API, Redis and Celery acceptance
+        run: bash scripts/db/postgres-acceptance.sh
+
+  docker-compose-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Install backend requirements
+        run: python -m pip install -r backend/requirements.txt
+      - name: Build and smoke isolated Docker Compose stack
+        run: python scripts/acceptance/run.py --skip-backend-tests --with-docker-config --with-docker-runtime --report /tmp/factorylink-docker-runtime.json
+      - name: Upload Docker runtime acceptance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: factorylink-docker-runtime-acceptance
+          path: /tmp/factorylink-docker-runtime.json
+          if-no-files-found: ignore
+
+  production-container-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate production Compose configuration
+        run: docker compose --env-file .env.production.example -f docker-compose.production.yml config --quiet
+      - name: Build production application and backup images
+        run: docker compose --env-file .env.production.example -f docker-compose.production.yml build backend frontend backup-scheduler

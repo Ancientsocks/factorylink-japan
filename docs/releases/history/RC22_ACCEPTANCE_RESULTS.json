@@ -1,0 +1,32 @@
+{
+  "release": "1.0.0-rc.22",
+  "date": "2026-11-03",
+  "status": "local_core_complete_candidate_not_production_approved",
+  "verification": {
+    "backend_test_groups": {
+      "tests/test_api.py": {"passed": 71, "failed": 0, "execution": "run in smaller batches"},
+      "tests/test_release_integrity.py + tests/test_admin_bootstrap.py + tests/test_render_deploy.py": {"passed": 40, "failed": 0},
+      "tests/test_mailer.py + tests/test_malware_scanner.py + tests/test_object_storage.py": {"passed": 19, "failed": 0}
+    },
+    "backend_tests_total": {"passed": 130, "failed": 0},
+    "focused_rc22_workflow_tests": {"passed": 3, "failed": 0, "included_in_backend_tests_total": true},
+    "fresh_sqlite_alembic_upgrade_to": "0007_quality_capa_serial_traceability",
+    "demo_seed": "passed; one quality template and initial CAPA case created",
+    "python_compileall": "passed",
+    "frontend_tsx_transpile": {"files": ["frontend/src/App.tsx", "frontend/src/i18n.ts"], "syntax_diagnostics": 0}
+  },
+  "not_executed": [
+    "Docker Compose build and runtime",
+    "Dependency-backed Vite production build and Playwright browser journeys; npm install timed out in this environment",
+    "Real PostgreSQL 17 RLS, grants, triggers and concurrency acceptance",
+    "Real Redis and Celery worker/scheduler execution",
+    "Real ClamAV 1.5 signature warm-up, clean/EICAR/outage upload tests",
+    "Real S3/IAM integration",
+    "Backup/restore drill, k6 load test, independent security review and staging/customer acceptance"
+  ],
+  "notes": [
+    "SQLite migration success does not prove PostgreSQL RLS or grants.",
+    "Frontend transpile syntax validation is not a dependency-backed typecheck or production build.",
+    "Use fictional demo data until local and customer acceptance is complete."
+  ]
+}

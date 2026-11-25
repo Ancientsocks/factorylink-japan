@@ -1,0 +1,213 @@
+name: factorylink
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-factorylink}
+      POSTGRES_USER: ${POSTGRES_USER:-factorylink}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-factorylink_local}
+      TZ: Asia/Tokyo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-factorylink} -d ${POSTGRES_DB:-factorylink}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [factorylink]
+
+  db-bootstrap:
+    image: postgres:17-alpine
+    restart: "no"
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: ${POSTGRES_DB:-factorylink}
+      PGUSER: ${POSTGRES_USER:-factorylink}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-factorylink_local}
+      RUNTIME_DB_USER: ${RUNTIME_DB_USER:-factorylink_app}
+      RUNTIME_DB_PASSWORD: ${RUNTIME_DB_PASSWORD:-factorylink_runtime_local}
+    volumes:
+      - ./scripts/db/create-runtime-role.sql:/bootstrap/create-runtime-role.sql:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - >-
+        if [ "$${RUNTIME_DB_USER}" = "$${PGUSER}" ]; then echo "RUNTIME_DB_USER must differ from POSTGRES_USER" >&2; exit 1; fi;
+        if [ -z "$${RUNTIME_DB_PASSWORD}" ]; then echo "RUNTIME_DB_PASSWORD must not be empty" >&2; exit 1; fi;
+        until pg_isready -h db -p 5432 -U "$${PGUSER}" -d "$${PGDATABASE}"; do sleep 1; done;
+        psql -v ON_ERROR_STOP=1
+        -v runtime_db_user="$${RUNTIME_DB_USER}"
+        -v runtime_db_password="$${RUNTIME_DB_PASSWORD}"
+        -v postgres_owner="$${PGUSER}"
+        -f /bootstrap/create-runtime-role.sql
+    depends_on:
+      db: { condition: service_healthy }
+    networks: [factorylink]
+
+  migrate:
+    build:
+      context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    restart: "no"
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-factorylink}:${POSTGRES_PASSWORD:-factorylink_local}@db:5432/${POSTGRES_DB:-factorylink}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      RUNTIME_DB_USER: ${RUNTIME_DB_USER:-factorylink_app}
+      TZ: Asia/Tokyo
+    command: ["sh", "-ec", "alembic upgrade head; if [ \"$${SEED_DEMO_DATA}\" = \"true\" ]; then python -m app.seed; fi"]
+    depends_on:
+      db-bootstrap: { condition: service_completed_successfully }
+    networks: [factorylink]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "192mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [factorylink]
+
+  clamav:
+    # Official ClamAV image; signatures persist across container recreation.
+    image: clamav/clamav:1.5
+    restart: unless-stopped
+    environment:
+      CLAMAV_NO_MILTERD: "true"
+      TZ: Asia/Tokyo
+    volumes:
+      - clamav_database:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping=1:1 --config-file=/etc/clamav/clamd.conf >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
+    # clamd TCP is unauthenticated/unencrypted: never publish 3310 to the host.
+    networks: [factorylink]
+
+  backend:
+    build:
+      context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DATABASE_URL: postgresql+psycopg://${RUNTIME_DB_USER:-factorylink_app}:${RUNTIME_DB_PASSWORD:-factorylink_runtime_local}@db:5432/${POSTGRES_DB:-factorylink}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-development-only-change-this-secret-before-deployment}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-20}
+      REFRESH_TOKEN_DAYS: ${REFRESH_TOKEN_DAYS:-14}
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-FactoryLink <no-reply@factorylink.local>}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:8080}
+      EXPOSE_AUTH_ACTION_LINKS: ${EXPOSE_AUTH_ACTION_LINKS:-true}
+      AUTO_CREATE_SCHEMA: "false"
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      ALLOW_PUBLIC_REGISTRATION: ${ALLOW_PUBLIC_REGISTRATION:-true}
+      NACE_API_KEY: ${NACE_API_KEY:-}
+      NACE_MODEL: ${NACE_MODEL:-drex-latest}
+      MALWARE_SCAN_ENABLED: ${MALWARE_SCAN_ENABLED:-true}
+      MALWARE_SCANNER_HOST: ${MALWARE_SCANNER_HOST:-clamav}
+      MALWARE_SCANNER_PORT: ${MALWARE_SCANNER_PORT:-3310}
+      MALWARE_SCANNER_TIMEOUT_SECONDS: ${MALWARE_SCANNER_TIMEOUT_SECONDS:-30}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-local}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET:-}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION:-ap-northeast-1}
+      STORAGE_S3_ENDPOINT_URL: ${STORAGE_S3_ENDPOINT_URL:-}
+      STORAGE_S3_ACCESS_KEY_ID: ${STORAGE_S3_ACCESS_KEY_ID:-}
+      STORAGE_S3_SECRET_ACCESS_KEY: ${STORAGE_S3_SECRET_ACCESS_KEY:-}
+      UPLOAD_DIR: /app/data/uploads
+      TZ: Asia/Tokyo
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - factorylink_uploads:/app/data/uploads
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+      clamav: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    networks: [factorylink]
+
+  worker:
+    build:
+      context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=INFO", "--concurrency=2"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${RUNTIME_DB_USER:-factorylink_app}:${RUNTIME_DB_PASSWORD:-factorylink_runtime_local}@db:5432/${POSTGRES_DB:-factorylink}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-development-only-change-this-secret-before-deployment}
+      REDIS_URL: redis://redis:6379/0
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-FactoryLink <no-reply@factorylink.local>}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      TZ: Asia/Tokyo
+    volumes:
+      - factorylink_uploads:/app/data/uploads
+    depends_on:
+      backend: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [factorylink]
+
+  scheduler:
+    build:
+      context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    restart: unless-stopped
+    command: ["celery", "-A", "app.celery_app.celery_app", "beat", "--loglevel=INFO"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${RUNTIME_DB_USER:-factorylink_app}:${RUNTIME_DB_PASSWORD:-factorylink_runtime_local}@db:5432/${POSTGRES_DB:-factorylink}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-development-only-change-this-secret-before-deployment}
+      REDIS_URL: redis://redis:6379/0
+      TZ: Asia/Tokyo
+    depends_on:
+      backend: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [factorylink]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_FACTORYLINK_PUBLIC_REGISTRATION: ${VITE_FACTORYLINK_PUBLIC_REGISTRATION:-true}
+    restart: unless-stopped
+    environment:
+      BACKEND_HOST: ${BACKEND_HOST:-backend:8000}
+    ports:
+      - "${APP_PORT:-8080}:10000"
+    depends_on:
+      backend: { condition: service_healthy }
+    networks: [factorylink]
+
+volumes:
+  postgres_data:
+  redis_data:
+  factorylink_uploads:
+  clamav_database:
+
+networks:
+  factorylink:
+    driver: bridge
