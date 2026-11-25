@@ -1,354 +1,414 @@
 # FactoryLink 🇯🇵
 ### Manufacturing Operations & Supplier Collaboration Platform
 
-**Connecting Japanese manufacturers, suppliers, inventory, production, quality control, and traceability in one platform.**
+**Connecting suppliers, inventory, production, quality, and traceability in one manufacturing platform.**
 
-FactoryLink is a full-stack manufacturing operations and supplier collaboration platform designed around the operational challenges faced by Japanese manufacturing companies, particularly small and medium-sized manufacturers.
+FactoryLink is a full-stack manufacturing operations platform designed around the challenges faced by Japanese small and medium-sized manufacturers. It brings disconnected manufacturing workflows into one centralized system, helping manufacturers manage purchasing, supplier collaboration, inventory, production, quality inspections, maintenance, and finished-product traceability.
 
-It provides a centralized digital workspace to manage the manufacturing lifecycle — from purchasing raw materials and coordinating with suppliers to production, quality inspections, inventory management, and finished-product shipments.
-
-Built with **English and Japanese language support**, Tokyo timezone defaults, and Japanese Yen (JPY) currency conventions.
+The project focuses on making manufacturing operations more organized, transparent, and data-driven without requiring businesses to depend on multiple disconnected tools.
 
 ---
 
-## 1. The Problem: Manufacturing Challenges in Japan
+## 🇯🇵 The Problem: Manufacturing Digitalization in Japan
 
-Japan has one of the world's most established manufacturing industries. However, maintaining manufacturing productivity and competitiveness has become increasingly challenging.
+Japan has a large manufacturing ecosystem supported by manufacturers, component producers, and small and medium-sized suppliers. However, improving digital capabilities and connecting operational data across manufacturing processes remain important challenges.
 
-While researching Japan's manufacturing industry and government publications, I identified several important challenges:
+Japan's **2026 White Paper on Manufacturing Industries**, published by the Ministry of Economy, Trade and Industry (METI), highlights the importance of strengthening industrial competitiveness through digital technology, AI adoption, growth investment, and economic security.
 
-### Key challenges
+One particularly relevant finding is discussed in a Tokyo Metropolitan Government analysis of the 2026 White Paper:
 
-**1. Labour Shortages**
+- Approximately **66%** of surveyed manufacturers collect some production data.
+- Only **43.9%** report using that data to achieve operational improvements.
+- Data silos, limited digital skills, and difficulties connecting information remain barriers to effective digital transformation.
 
-Manufacturers, particularly smaller businesses, face difficulties securing and retaining skilled workers. This creates pressure to improve productivity and reduce dependence on manual administrative processes.
+### Operational Problems
 
-**2. Supplier and Supply-Chain Coordination**
+Many manufacturing workflows can still be difficult to coordinate when information is distributed across spreadsheets, disconnected systems, and manual processes.
 
-Manufacturers depend on multiple suppliers for raw materials and components. Disconnected communication, delayed delivery updates, and limited visibility into supplier activities can make production planning difficult.
-
-**3. Manufacturing Productivity**
-
-Managing purchasing, inventory, production, and quality operations through disconnected systems or manual processes makes it difficult to maintain visibility across the manufacturing lifecycle.
-
-**4. Digital Transformation (DX)**
-
-Smaller manufacturers can face financial, technical, and workforce barriers when adopting digital technologies and connecting their existing business operations.
-
-**5. Inventory and Production Traceability**
-
-Manufacturers need reliable information about material batches, production activities, inspection results, and finished products. Poor visibility can make quality investigations and inventory reconciliation more difficult.
-
-### Government research and references
-
-FactoryLink's problem context is informed by the following Japanese government publications:
-
-- [METI – Smart Manufacturing Development Guideline (2024)](https://www.meti.go.jp/english/press/2024/0628_002.html): Identifies supply-chain disruptions, productivity declines associated with labour shortages, and increasing management costs.
-- [METI – White Paper on Manufacturing Industries (2025)](https://www.meti.go.jp/english/press/2025/0530_007.html): Discusses manufacturing competitiveness, digital transformation, human resources, and economic security.
-- [METI – 2025 White Paper on Small and Medium Enterprises](https://www.meti.go.jp/english/press/2025/0425_001.html): Highlights structural labour shortages and increasing production and investment costs.
-- [Small and Medium Enterprise Agency – 2025 White Paper](https://www.chusho.meti.go.jp/pamflet/hakusyo/2025/shokibo/b2_1_1.html): Discusses barriers to digital transformation, including costs, insufficient DX personnel, and limited time.
-
----
-
-## 2. The Solution: FactoryLink
-
-FactoryLink aims to address operational fragmentation by connecting essential manufacturing activities in one system.
-
-Instead of treating purchasing, suppliers, inventory, production, quality, and maintenance as separate processes, FactoryLink connects them through a shared operational workflow.
-
-### How FactoryLink addresses these challenges
-
-| Manufacturing challenge | FactoryLink solution |
+| Manufacturing challenge | Operational impact |
 |---|---|
-| Disconnected supplier communication | Dedicated supplier collaboration portal |
-| Limited purchase-order visibility | Purchase orders and delivery tracking |
-| Inventory inconsistencies | Batch-based inventory and immutable stock ledger |
-| Production material shortages | FIFO inventory reservations |
-| Difficult product traceability | Forward and backward lot genealogy |
-| Quality-control problems | Inspection templates, quality holds, and CAPA |
-| Equipment downtime | Preventive maintenance and breakdown tracking |
-| Language barriers | English and Japanese interface |
+| Production records scattered across Excel files | Difficult to maintain consistent and centralized information |
+| Disconnected supplier systems | Limited visibility into purchase orders and deliveries |
+| Difficult product defect tracing | Time-consuming quality investigations |
+| Untracked machine downtime | Limited visibility into equipment performance |
+| Manually updated production schedules | Increased coordination effort and risk of outdated information |
+| Expensive and complicated enterprise systems | Difficult adoption for smaller manufacturers |
 
-**The goal:** Improve operational visibility, strengthen supplier coordination, and provide manufacturers with a connected digital foundation for managing their operations.
+### The Software Opportunity
 
-FactoryLink is an independent software project inspired by these industry challenges, not an officially endorsed Japanese government product.
+FactoryLink addresses these operational challenges through a unified manufacturing management platform.
 
----
+Instead of managing suppliers, purchasing, inventory, production, and quality through separate tools, manufacturers can coordinate these workflows through a connected system with shared operational records.
 
-## 3. Manufacturing Workflow
+**The goal:** Make manufacturing information easier to manage, connect, track, and analyse.
 
-FactoryLink models the manufacturing lifecycle from purchasing raw materials to shipping finished products.
+### Research and References
 
-1. **Purchase Orders:** Manufacturers create purchase orders and share them with registered suppliers.
-2. **Supplier Collaboration:** Suppliers access a separate workspace to confirm orders, update delivery progress, and share documents.
-3. **Goods Receiving:** Factories record partial or complete deliveries. Each receipt creates inventory lots and immutable stock movements.
-4. **Inventory Management:** Materials are tracked by batch, with FIFO reservations, stock adjustments, and inventory history.
-5. **Production Management:** Production orders reserve materials, track progress, and record completed and rejected quantities.
-6. **Product Serialisation:** Accepted finished units receive unique serial numbers linked to their source material lots.
-7. **Quality Control:** Reusable inspection templates support pass/fail checks and numeric tolerance validation.
-8. **Corrective Actions:** Failed inspections trigger quality holds and CAPA cases. Releasing held inventory requires explicit approval and supporting evidence.
-9. **Traceability:** Manufacturers can investigate the complete journey from supplier and raw material batches to production, inspection, and shipment.
-10. **Maintenance:** Equipment maintenance, breakdowns, and downtime are recorded and analysed.
+- [METI – 2026 White Paper on Manufacturing Industries](https://www.meti.go.jp/english/press/2026/0529_003.html)
+- [METI – 2026 White Paper Summary (PDF)](https://www.meti.go.jp/english/press/2026/pdf/0529_003a.pdf)
+- [Tokyo Metropolitan Government – Analysis of IT Utilization and Cybersecurity Based on the 2026 Manufacturing White Paper](https://www.cybersecurity.metro.tokyo.lg.jp/links/762/index.html)
+
+*FactoryLink is an independent software project inspired by these documented industry challenges. It is not affiliated with or endorsed by the Japanese government.*
 
 ---
 
-## 4. Core Features
+## 💡 The Solution: FactoryLink
 
-### Supplier and Procurement Management
-- Multi-tenant manufacturer and supplier workspaces.
-- Supplier registry and supplier portal.
-- Purchase-order creation and management.
-- Supplier order confirmations and delivery updates.
-- Document sharing between manufacturers and suppliers.
-- Partial and complete goods receipts.
+FactoryLink connects the major stages of manufacturing operations through a centralized platform.
 
-### Inventory and Warehouse Management
-- Material and batch management.
-- FIFO stock reservations.
-- Immutable stock movement ledger.
-- Reason-coded inventory adjustments.
-- Inventory reconciliation and stock visibility.
+### Core Modules
 
-### Production Management
-- Production order management.
-- Material reservation and consumption.
-- Production progress tracking.
-- Completed and rejected quantity tracking.
-- Unique serial numbers for accepted finished products.
+| Module | Capabilities |
+|---|---|
+| Supplier Management | Supplier registration, supplier workspaces, and collaboration |
+| Purchase Management | Purchase orders, supplier confirmations, and delivery tracking |
+| Inventory Management | Material tracking, lot management, FIFO allocation, and stock movements |
+| Production Management | Production orders, material reservations, progress tracking, and completion |
+| Quality Management | Inspection templates, defect recording, quality holds, and corrective actions |
+| Machine Maintenance | Equipment records, maintenance scheduling, and maintenance history |
+| Product Traceability | QR-based identification and production genealogy |
+| Shipping Management | Finished-product tracking and shipment records |
+| Analytics & Reporting | Operational dashboards, reports, and CSV/XLSX exports |
+| Audit & Notifications | Activity history, system notifications, and operational visibility |
 
-### Quality Management
-- Reusable quality inspection templates.
-- Pass/fail and numeric tolerance inspections.
-- Defect recording.
-- Automatic quality holds following failed inspections.
-- Corrective and Preventive Action (CAPA) lifecycle.
-- Evidence-gated quality release.
+### 1. Supplier Collaboration
 
-### Product Traceability
-- Forward material-lot genealogy.
-- Backward finished-product serial genealogy.
-- Supplier-to-finished-product traceability.
-- QR code generation and downloading.
-- Camera-based QR scanning with manual fallback.
-- Shipment records.
+Manufacturers can manage suppliers and purchase orders through a centralized workspace.
 
-### Maintenance Management
-- Equipment registry.
-- Preventive maintenance scheduling.
-- Unplanned maintenance and breakdown records.
-- Equipment downtime tracking.
-- Maintenance analytics.
+Suppliers have a separate portal where they can:
 
-### Administration and Reporting
-- Role-based access control.
-- User and supplier management.
-- Refresh-token rotation.
-- Audit history.
-- Notifications and operational dashboards.
-- CSV and XLSX reports.
-- Safe editing, deletion, deactivation, and archival rules.
+- View assigned purchase orders.
+- Confirm or respond to orders.
+- Update delivery status.
+- Share relevant documents.
+- Coordinate incoming material deliveries.
 
-### Japanese Localization
-- English and Japanese user interfaces.
-- Japanese UTF-8 character handling.
-- Tokyo timezone defaults.
-- Japanese Yen (JPY) currency defaults.
+### 2. Inventory and Material Tracking
+
+The inventory module tracks materials from receipt through production consumption.
+
+- Record full and partial goods receipts.
+- Create inventory lots and batches.
+- Track stock movements through an immutable ledger.
+- Reserve materials using FIFO allocation.
+- Record reason-coded inventory adjustments.
+- Maintain material availability information.
+
+### 3. Production Management
+
+Production teams can manage manufacturing orders and monitor execution.
+
+- Create and manage production orders.
+- Reserve required materials.
+- Track production progress.
+- Record material consumption.
+- Track accepted and rejected production quantities.
+- Generate unique serial numbers for accepted finished units.
+
+### 4. Quality Management
+
+FactoryLink connects quality inspections with production and inventory records.
+
+- Configure inspection templates.
+- Perform pass/fail and numeric-tolerance inspections.
+- Record defects and inspection results.
+- Create quality holds when failures occur.
+- Manage corrective and preventive actions (CAPA).
+- Require evidence-based approval before releasing held inventory.
+
+### 5. Product Traceability
+
+Product genealogy connects the different stages of manufacturing.
+
+A finished product can be traced through its manufacturing history:
+
+**Supplier → Purchase Order → Goods Receipt → Material Lot → Production Order → Quality Inspection → Finished Product → Shipment**
+
+QR codes support product identification and traceability, with camera scanning and manual lookup options.
+
+### 6. Machine Maintenance
+
+The maintenance module provides a centralized record of equipment and maintenance activities.
+
+- Maintain equipment records.
+- Schedule maintenance activities.
+- Track maintenance history.
+- Record equipment-related operational issues.
+
+### 7. Production Analytics and Reporting
+
+FactoryLink provides operational visibility through dashboards and reports.
+
+- Production progress.
+- Inventory and material availability.
+- Quality inspection results.
+- Defect and rejection information.
+- Equipment maintenance records.
+- CSV and Excel reporting.
 
 ---
 
-## 5. Technology Stack
+## 🔄 Manufacturing Workflow
+
+FactoryLink connects the manufacturing lifecycle from purchasing materials to shipping finished products.
+
+1. **Purchasing:** The manufacturer creates purchase orders and shares them with suppliers.
+2. **Supplier Confirmation:** Suppliers confirm orders and update delivery information.
+3. **Goods Receipt:** Incoming materials are received and recorded as inventory lots.
+4. **Inventory Allocation:** Materials are reserved for production using FIFO.
+5. **Production:** Production orders track manufacturing progress and material consumption.
+6. **Quality Inspection:** Finished units undergo inspection, with failures creating quality holds and corrective actions.
+7. **Serialisation:** Accepted finished units receive unique serial numbers.
+8. **Traceability:** QR codes connect finished products to their source materials and manufacturing history.
+9. **Shipping:** Finished products are recorded and tracked through shipment.
+
+---
+
+## 🏗️ System Architecture
+
+FactoryLink uses a modular full-stack architecture with a React frontend, FastAPI backend, PostgreSQL database, and supporting background services.
+
+```text
+                    FACTORYLINK
+                         |
+          +--------------+--------------+
+          |                             |
+    React Frontend                 FastAPI Backend
+    React 19                       Python 3.12
+    TypeScript                     REST APIs
+    Vite                           SQLAlchemy 2
+    Nginx                          Pydantic
+          |                             |
+          |                    +--------+--------+
+          |                    |        |        |
+          |                PostgreSQL  Redis   Celery
+          |                Database    Cache   Workers
+          |                                     |
+          |                                Scheduler
+          |
+      Manufacturer
+      & Supplier
+       Workspaces
+
+          Supporting Services:
+          - Alembic Migrations
+          - ClamAV File Scanning
+          - Docker Compose
+          - GitHub Actions CI
+```
+
+### Technology Stack
 
 | Layer | Technologies |
 |---|---|
 | Frontend | React 19, TypeScript, Vite |
+| UI Delivery | Nginx |
 | Backend | Python 3.12, FastAPI |
 | ORM | SQLAlchemy 2 |
 | Database | PostgreSQL 17 |
-| Migrations | Alembic |
-| Background Jobs | Celery |
-| Message Broker / Cache | Redis 7 |
-| Malware Scanning | ClamAV |
-| Web Server | Nginx |
+| Database Migrations | Alembic |
+| Background Processing | Celery |
+| Caching and Message Broker | Redis 7 |
+| File Security | ClamAV |
 | Containerization | Docker, Docker Compose |
-| Cloud Deployment | Render Blueprint |
+| Deployment Configuration | Render Blueprint |
 | CI | GitHub Actions |
 
-### Architecture
-
-FactoryLink follows a modular monolith architecture with separate frontend, backend, database, background-worker, scheduler, and malware-scanning services.
-
-The system uses PostgreSQL row-level security to enforce tenant isolation and database-backed inventory and traceability records to maintain operational consistency.
-
 ---
 
-## 6. Security and Data Integrity
+## 🔐 Security and Data Integrity
 
-Security and data integrity are important because manufacturing systems handle supplier information, inventory records, quality evidence, and production history.
+FactoryLink includes security and data-integrity mechanisms designed for a multi-tenant manufacturing environment.
 
-Implemented security measures include:
-
-- Multi-tenant access isolation using PostgreSQL Row-Level Security.
-- Role-based permissions.
-- Access and refresh-token authentication.
+- Role-based access control (RBAC).
+- Multi-tenant data isolation using PostgreSQL Row-Level Security (RLS).
 - Refresh-token rotation.
-- Six-digit email verification codes.
-- SHA-256 hashing of verification codes.
-- Verification-code expiration and attempt limits.
-- Rate limiting.
-- Password reset verification.
-- Optional Google authentication.
-- ClamAV document malware scanning.
-- Immutable stock movement history.
-- Audit logging.
-- Controlled quality-hold release.
-- Safe deletion rules to protect historical records.
+- Email verification and password-reset codes.
+- SHA-256 hashing of verification codes stored in the database.
+- Code expiration and attempt limits.
+- Rate limiting and input validation.
+- File scanning integration through ClamAV.
+- Audit logs for important operational activities.
+- Evidence-gated release of quality-held inventory.
+
+### Authentication Options
+
+- Email-based registration and authentication.
+- Email verification and password-reset workflows.
+- Optional Google sign-in integration.
+- SMTP or Resend integration for email delivery.
 
 ---
 
-## 7. Testing and Verification
+## 🌐 Localization
 
-FactoryLink has undergone extensive local testing.
+FactoryLink is designed with Japanese manufacturing workflows in mind.
+
+- English and Japanese user interfaces.
+- Japan/Tokyo timezone defaults.
+- Japanese Yen (JPY) currency defaults.
+- Separate manufacturer and supplier workspaces.
+
+---
+
+## 🧪 Testing and Verification
+
+The current local evaluation build has undergone automated testing and infrastructure verification.
 
 | Verification | Result |
 |---|---|
 | Backend automated tests | 207 passed |
-| Frontend unit tests | 8 passed |
-| Production frontend build | Passed |
-| PostgreSQL migration verification | 0014 applied successfully |
-| Runtime database permissions | Create, update, and delete verified |
-| Docker Compose services | All verified healthy |
-| Dependency security audits | No known vulnerabilities reported |
-| Acceptance tests | 5 passed, 0 failed, 6 skipped |
-| Alembic migration history | 14 migrations |
+| Frontend automated tests | 8 passed |
+| Frontend production build | Passed |
+| Vite production build | 1,580 modules |
+| PostgreSQL version | 17.11 verified |
+| Alembic migrations | 14 migrations |
+| Docker Compose services | Healthy |
+| Backend readiness endpoint | Passed |
+| Acceptance runner | 5 passed, 0 failed, 6 skipped |
+| Python dependency audit | No known vulnerabilities reported |
+| npm dependency audit | No known vulnerabilities reported |
 
-### Important verification notes
-
-- PostgreSQL 17.11 was tested.
-- Docker Compose was tested with PostgreSQL, Redis, ClamAV, migrations, backend, worker, scheduler, and frontend.
-- The application readiness endpoint was verified.
-- Playwright browser journeys remain to be fully verified.
-- Real external email delivery requires SMTP or Resend configuration.
+*These results describe the local evaluation environment and do not represent independent production certification.*
 
 ---
 
-## 8. Running Locally
+## 🚀 Running Locally
 
 ### Prerequisites
 
+- Git
 - Docker Desktop
 - Docker Compose
-- Git
 
-### Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/Ancientsocks/factorylink-japan.git
 cd factorylink-japan
 ```
 
-### Configure environment variables
+### 2. Configure Environment Variables
+
+Copy the example environment file:
+
+**Windows PowerShell:**
+
+```powershell
+Copy-Item .env.example .env
+```
+
+**Linux/macOS:**
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and configure the required local environment values.
+Configure the required environment variables using the example file and the project's configuration documentation.
 
-### Start the application
+Do not commit real credentials, API keys, database passwords, or production secrets.
+
+### 3. Start the Application
 
 ```bash
 docker compose up --build -d
 ```
 
-### Access the application
+### 4. Access FactoryLink
 
 | Service | URL |
 |---|---|
-| FactoryLink Frontend | http://localhost:8080 |
+| Frontend | http://localhost:8080 |
 | Backend API | http://localhost:8080/api |
 | API Documentation | http://localhost:8080/docs |
-| API Readiness | http://localhost:8080/health/ready |
+| Health Check | http://localhost:8080/health |
 
-To inspect running services:
+*The API and health routes are subject to the application's configured routing.*
 
-```bash
-docker compose ps
+---
+
+## 📁 Project Structure
+
+```text
+factorylink-japan/
+│
+├── frontend/              # React + TypeScript application
+│
+├── backend/               # FastAPI application
+│   ├── app/               # Application modules
+│   ├── migrations/        # Alembic migrations
+│   └── tests/             # Backend tests
+│
+├── docker-compose.yml     # Local service orchestration
+├── Dockerfile             # Container build configuration
+├── render.yaml            # Render deployment configuration
+├── .github/               # GitHub Actions workflows
+├── .env.example           # Environment variable template
+└── README.md
 ```
 
-To inspect application logs:
-
-```bash
-docker compose logs -f
-```
-
-To stop the application:
-
-```bash
-docker compose down
-```
+*Directory names may vary slightly depending on the repository layout.*
 
 ---
 
-## 9. Project Documentation
+## 🛣️ Project Status
 
-FactoryLink includes detailed technical and operational documentation.
+**Current Status: Hardened Local Evaluation Candidate**
 
-| Document | Description |
-|---|---|
-| `ARCHITECTURE.md` | Application architecture |
-| `DATABASE_DESIGN.md` | Database structure and relationships |
-| `API_DOCUMENTATION.md` | API endpoints |
-| `SECURITY.md` | Security implementation |
-| `TESTING.md` | Testing and verification |
-| `DEPLOYMENT.md` | Deployment instructions |
-| `PRODUCTION_DEPLOYMENT.md` | Production deployment guidance |
-| `PRODUCTION_OPERATIONS_RUNBOOK.md` | Operational procedures |
-| `USER_GUIDE.md` | Application usage |
-| `TROUBLESHOOTING.md` | Common issues and solutions |
+FactoryLink has a functioning local implementation with core manufacturing workflows, automated tests, database migrations, and containerized services.
 
----
+### Implemented
 
-## 10. Current Project Status
+- Manufacturer and supplier workspaces.
+- Authentication and access control.
+- Supplier and purchase-order management.
+- Goods receipts and inventory tracking.
+- FIFO material reservations.
+- Production orders and serialisation.
+- Quality inspections and CAPA workflows.
+- Product genealogy and QR traceability.
+- Equipment and maintenance records.
+- Dashboards, reporting, and audit logs.
+- English and Japanese localization.
+- Docker-based local deployment.
 
-**Status: Hardened Local Evaluation Candidate**
+### Remaining Before Production Deployment
 
-FactoryLink is functional locally using Docker Compose, and its automated tests, database migrations, frontend build, and local infrastructure have been verified.
+- End-to-end browser testing with Playwright.
+- Production deployment and environment validation.
+- Private object storage integration (S3).
+- ClamAV signature database warm-up verification.
+- Real email delivery configuration.
+- External monitoring and alerting.
+- Database backup and point-in-time recovery drills.
+- Production security and operational review.
 
-However, it has not yet received full production approval.
-
-The following activities remain:
-
-- Complete Playwright end-to-end browser testing.
-- Verify the cloud deployment on Render.
-- Configure and verify private S3-compatible object storage.
-- Verify real SMTP or Resend email delivery.
-- Verify ClamAV signature database warm-up.
-- Configure external application monitoring.
-- Perform production backup and point-in-time recovery drills.
-- Complete production security and operational acceptance testing.
+**Important:** FactoryLink is not yet production-approved. The current implementation is intended for local evaluation and further validation.
 
 ---
 
-## 11. Project Vision
+## 🎯 Project Goals
 
-FactoryLink was developed with a simple idea:
+FactoryLink aims to demonstrate how a connected software platform can improve visibility and coordination across manufacturing operations.
 
-**Manufacturing operations should work as one connected system, not as disconnected processes.**
+Its main objectives are:
 
-By bringing suppliers, purchasing, inventory, production, quality control, traceability, and maintenance together, FactoryLink demonstrates how a connected digital platform can help manufacturers improve operational visibility and coordination.
-
-The project explores how modern web technologies can be applied to real-world industrial workflows, with particular attention to the challenges faced by Japanese manufacturers.
+- Reduce dependence on disconnected spreadsheets.
+- Improve communication between manufacturers and suppliers.
+- Make inventory and production information easier to track.
+- Improve quality investigation through product genealogy.
+- Provide better visibility into manufacturing operations.
+- Make digital manufacturing workflows more accessible to smaller businesses.
 
 ---
 
-## 12. Author
+## 👨‍💻 Author
 
 **Abdul Rahman**
 
-GitHub: [@Ancientsocks](https://github.com/Ancientsocks)
-
-LinkedIn: [Abdul Rahman](https://www.linkedin.com/in/abdul-rahman-770409247/)
+- GitHub: [@Ancientsocks](https://github.com/Ancientsocks)
+- LinkedIn: [Abdul Rahman](https://www.linkedin.com/in/abdul-rahman-770409247/)
 
 ---
 
-*FactoryLink — Connecting Manufacturing Operations, One Workflow at a Time.*
+*FactoryLink — Connecting every stage of manufacturing, from supplier to finished product.*
