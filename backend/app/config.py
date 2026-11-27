@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -55,6 +55,16 @@ class Settings(BaseSettings):
     password_reset_rate_limit_per_minute: int = Field(default=3, ge=1, le=1000)
     rate_limit_redis_timeout_seconds: float = Field(default=1.0, ge=0.1, le=10.0)
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False, extra="ignore")
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_database_url(cls, value):
+        """Accept the plain postgres:// URLs that hosts like Render provide."""
+        if isinstance(value, str):
+            for prefix in ("postgres://", "postgresql://"):
+                if value.startswith(prefix):
+                    return "postgresql+psycopg://" + value[len(prefix):]
+        return value
 
     @property
     def allowed_origins(self) -> list[str]:
